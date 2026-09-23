@@ -1,11 +1,5 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { motion, useReducedMotion } from "framer-motion"
-import { useForm } from "react-hook-form"
-import { FileText, ImagePlus, Mic2, Upload, X } from "lucide-react"
-import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -22,6 +16,12 @@ import {
   ACCEPTED_IMAGE_TYPES,
   ACCEPTED_PDF_TYPES
 } from "@/lib/upload-constants"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { motion, useReducedMotion } from "framer-motion"
+import { FileText, ImagePlus, Mic2, Upload, X } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
 const voices = [
   {
@@ -49,10 +49,12 @@ function formatFileSize(bytes: number) {
 
 function FileSummary({
   file,
-  onRemove
+  onRemove,
+  disabled
 }: {
   file?: File
   onRemove: () => void
+  disabled?: boolean
 }) {
   if (!file) return null
   return (
@@ -69,8 +71,9 @@ function FileSummary({
       <button
         type="button"
         onClick={onRemove}
+        disabled={disabled}
         aria-label={`Remove ${file.name}`}
-        className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground"
+        className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
       >
         <X className="size-4" />
       </button>
@@ -87,12 +90,19 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
   const prefersReducedMotion = useReducedMotion()
   const pdfInputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [resetToken, setResetToken] = useState(0)
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(UploadSchema),
-    defaultValues: { title: "", author: "", persona: undefined }
+    defaultValues: {
+      title: "",
+      author: "",
+      persona: "",
+      pdfFile: undefined,
+      coverImage: undefined
+    }
   })
+  // React Hook Form owns the submit lifecycle, so this also covers validation.
+  const { isSubmitting } = form.formState
 
   const setFile = (field: "pdfFile" | "coverImage", file?: File) => {
     form.setValue(field, file, { shouldDirty: true, shouldValidate: true })
@@ -107,12 +117,12 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
   }, [resetToken])
 
   const submit = async (data: UploadFormValues) => {
-    setIsSubmitting(true)
+    // Belt and braces: the submit button is disabled, but Enter can re-submit.
+    if (isSubmitting) return
 
     // FF_DUMMY_FORM is false: the real database write is not wired up yet.
     if (!dummyForm) {
       toast.error("dummy feature is set to false")
-      setIsSubmitting(false)
       return
     }
 
@@ -122,7 +132,6 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
     toast.success("dummy submit success")
     form.reset()
     setResetToken((token) => token + 1)
-    setIsSubmitting(false)
   }
 
   const formItemVariants = prefersReducedMotion
@@ -165,7 +174,8 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                       data-form-item
                       type="button"
                       onClick={() => pdfInputRef.current?.click()}
-                      className="flex w-full items-center gap-4 rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-left transition-colors hover:border-foreground/50 hover:bg-muted/30"
+                      disabled={isSubmitting}
+                      className="flex w-full items-center gap-4 rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-left transition-colors hover:border-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Upload className="size-5 text-muted-foreground" />
                       <span>
@@ -179,6 +189,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                     </button>
                     <FileSummary
                       file={field.value}
+                      disabled={isSubmitting}
                       onRemove={() => {
                         setFile("pdfFile", undefined)
                         if (pdfInputRef.current) pdfInputRef.current.value = ""
@@ -213,7 +224,8 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                       data-form-item
                       type="button"
                       onClick={() => coverInputRef.current?.click()}
-                      className="flex w-full items-center gap-4 rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-left transition-colors hover:border-foreground/50 hover:bg-muted/30"
+                      disabled={isSubmitting}
+                      className="flex w-full items-center gap-4 rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-left transition-colors hover:border-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <ImagePlus className="size-5 text-muted-foreground" />
                       <span>
@@ -225,6 +237,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                     </button>
                     <FileSummary
                       file={field.value}
+                      disabled={isSubmitting}
                       onRemove={() => {
                         setFile("coverImage", undefined)
                         if (coverInputRef.current)
@@ -251,12 +264,13 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                 <FormControl>
                   <div>
                     <Input
-                      maxLength={25}
+                      maxLength={100}
+                      disabled={isSubmitting}
                       placeholder="ex: Rich Dad Poor Dad"
                       {...field}
                     />
                     <p className="mt-1.5 text-right text-[11px] tabular-nums text-muted-foreground">
-                      {field.value.length}/25
+                      {field.value.length}/100
                     </p>
                   </div>
                 </FormControl>
@@ -273,12 +287,13 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                 <FormControl>
                   <div>
                     <Input
-                      maxLength={25}
+                      maxLength={100}
+                      disabled={isSubmitting}
                       placeholder="ex: Robert Kiyosaki"
                       {...field}
                     />
                     <p className="mt-1.5 text-right text-[11px] tabular-nums text-muted-foreground">
-                      {field.value.length}/25
+                      {field.value.length}/100
                     </p>
                   </div>
                 </FormControl>
@@ -311,7 +326,8 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                               type="button"
                               aria-pressed={field.value === voice.name}
                               onClick={() => field.onChange(voice.name)}
-                              className={`rounded-xl border px-4 py-3 text-left transition-all ${field.value === voice.name ? "border-foreground bg-foreground text-background" : "border-foreground/10 hover:border-foreground/40"}`}
+                              disabled={isSubmitting}
+                              className={`rounded-xl border px-4 py-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${field.value === voice.name ? "border-foreground bg-foreground text-background" : "border-foreground/10 hover:border-foreground/40"}`}
                             >
                               <span className="flex items-center gap-2 text-sm">
                                 <Mic2 className="size-3.5" />
@@ -334,7 +350,9 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
             )}
           />
         </motion.div>
-        <motion.div variants={formItemVariants}>
+        <motion.div variants={formItemVariants}
+          className="flex w-full justify-end"
+        >
           <Button
             data-form-item
             type="submit"

@@ -18,7 +18,7 @@ export function CtaSection() {
             <Mic2 className="h-4 w-4" />
             Powered by VAPI voice AI
           </div>
-          <h2 className="font-display text-5xl leading-[0.92] tracking-tight transition-transform duration-700 md:text-7xl lg:text-[128px]">
+          <h2 className="font-display text-5xl leading-[0.92] tracking-tight transition-transform duration-700 md:text-7xl lg:text-[119px]">
             Your next
             <br />
             <span className="text-background/45">conversation awaits.</span>

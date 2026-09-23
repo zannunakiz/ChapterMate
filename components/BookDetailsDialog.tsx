@@ -43,9 +43,9 @@ export function BookDetailsDialog({
                 prefersReducedMotion
                   ? undefined
                   : {
-                      hidden: { opacity: 0, scale: 0.98 },
-                      visible: { opacity: 1, scale: 1 },
-                    }
+                    hidden: { opacity: 0, scale: 0.98 },
+                    visible: { opacity: 1, scale: 1 },
+                  }
               }
               data-dialog-item
               className="relative h-44 overflow-hidden bg-muted sm:h-full"
@@ -67,9 +67,9 @@ export function BookDetailsDialog({
                 prefersReducedMotion
                   ? undefined
                   : {
-                      hidden: { opacity: 0, y: 14 },
-                      visible: { opacity: 1, y: 0 },
-                    }
+                    hidden: { opacity: 0, y: 14 },
+                    visible: { opacity: 1, y: 0 },
+                  }
               }
               className="flex min-w-0 flex-col overflow-y-auto px-5 py-6 sm:px-9 sm:py-10 lg:px-12 lg:py-12"
             >
@@ -78,9 +78,9 @@ export function BookDetailsDialog({
                   prefersReducedMotion
                     ? undefined
                     : {
-                        hidden: { opacity: 0, y: 10 },
-                        visible: { opacity: 1, y: 0 },
-                      }
+                      hidden: { opacity: 0, y: 10 },
+                      visible: { opacity: 1, y: 0 },
+                    }
                 }
                 data-dialog-item
                 className="pr-8"
@@ -102,19 +102,20 @@ export function BookDetailsDialog({
                   prefersReducedMotion
                     ? undefined
                     : {
-                        hidden: { opacity: 0, y: 10 },
-                        visible: { opacity: 1, y: 0 },
-                      }
+                      hidden: { opacity: 0, y: 10 },
+                      visible: { opacity: 1, y: 0 },
+                    }
                 }
+                className="mt-auto"
               >
                 <DialogFooter
                   data-dialog-item
-                  className="mt-auto flex-col items-stretch gap-2 border-t border-foreground/10 pt-5 sm:flex-row sm:items-center sm:justify-end"
+                  className="flex-col items-stretch gap-2 border-t pt-5 sm:flex-row sm:items-center sm:justify-end"
                 >
                   <Button asChild className="h-9 rounded-full px-4 text-xs">
                     <a href={`/books/session/${book.slug}`}>
                       Start conversation{" "}
-                      <ArrowUpRight className="ml-2 size-3" />
+                      <ArrowUpRight className="ml-0 size-3" />
                     </a>
                   </Button>
                   <DialogClose asChild>
