@@ -73,7 +73,7 @@ export function DevelopersSection() {
             <span className="w-8 h-px bg-foreground/30" />
             Developer SDK
           </span>
-          <h2 className="text-6xl md:text-7xl lg:text-[128px] font-display tracking-tight leading-[0.9]">
+          <h2 className="text-6xl md:text-7xl lg:text-[119px] font-display tracking-tight leading-[0.9]">
             Code your agents.
             <br />
             <span className="text-muted-foreground">Or let them code.</span>

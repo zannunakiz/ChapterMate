@@ -81,6 +81,35 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/*
+ * Slightly smaller type scale (~7%) applied globally — desktop, tablet and
+ * mobile. Only font sizes and their line heights change; spacing utilities are
+ * untouched so the layout keeps its proportions.
+ */
+@theme {
+  --text-xs: 0.7rem;
+  --text-xs--line-height: 0.9375rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.1875rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.4375rem;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.1875rem;
+  --text-xl--line-height: 1.625rem;
+  --text-2xl: 1.4375rem;
+  --text-2xl--line-height: 1.875rem;
+  --text-3xl: 1.75rem;
+  --text-3xl--line-height: 2.125rem;
+  --text-4xl: 2.125rem;
+  --text-4xl--line-height: 2.375rem;
+  --text-5xl: 2.875rem;
+  --text-6xl: 3.5rem;
+  --text-7xl: 4.25rem;
+  --text-8xl: 5.625rem;
+  --text-9xl: 7.5rem;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

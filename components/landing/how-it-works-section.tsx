@@ -62,7 +62,7 @@ export function HowItWorksSection() {
               How it works
             </span>
             <h2
-              className={`font-display text-5xl leading-[0.92] tracking-tight transition-all duration-1000 md:text-6xl lg:text-[120px] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}
+              className={`font-display text-5xl leading-[0.92] tracking-tight transition-all duration-1000 md:text-6xl lg:text-[112px] ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}
             >
               Read with
               <br />

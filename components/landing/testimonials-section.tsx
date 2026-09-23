@@ -139,7 +139,7 @@ export function TestimonialsSection() {
           {/* Quote side */}
           <div className="lg:col-span-7 relative">
             {/* Large quote mark */}
-            <span className="absolute -left-4 -top-8 text-[200px] font-display text-background/5 leading-none select-none">
+            <span className="absolute -left-4 -top-8 text-[186px] font-display text-background/5 leading-none select-none">
               &ldquo;
             </span>
 
