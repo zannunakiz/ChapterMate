@@ -1,6 +1,7 @@
 "use client"
 
-import { motion, useReducedMotion, type ReactNode } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
+import type { ReactNode } from "react"
 import { ScrollRevealSections } from "./scroll-reveal-sections"
 
 export function PageMotion({ children }: { children: ReactNode }) {

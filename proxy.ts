@@ -1,6 +1,6 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 
-const publicPathPattern = /^\/(?:$|home(?:\/|$)|sign-in(?:\/|$)|sign-up(?:\/|$))/;
+const publicPathPattern = /^\/(?:$|home(?:\/|$)|sign-in(?:\/|$)|sign-up(?:\/|$)|api\/health(?:\/|$))/;
 
 export default clerkMiddleware(async (auth, request) => {
   if (!publicPathPattern.test(request.nextUrl.pathname)) {
