@@ -9,40 +9,53 @@ import { Button } from "@/components/ui/button"
 import { Navigation } from "@/components/landing/navigation"
 import { sampleBooks, myBooks, type Book } from "@/lib/constants"
 
-function LoadingGrid() {
+const LOADING_DELAY_MS = 2000
+
+// Mirrors the BookCard layout (cover, title, author) so the grid keeps its shape.
+function BookCardSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-5">
-      {Array.from({ length: 10 }).map((_, index) => (
-        <Skeleton
-          key={index}
-          className="aspect-[2/3] rounded-2xl bg-muted/60"
-          aria-label={`Loading book ${index + 1}`}
-        />
-      ))}
+    <div className="block">
+      <Skeleton className="aspect-[2/3] w-full rounded-2xl border border-foreground/25 bg-foreground/20" />
+      <div className="pt-4">
+        <Skeleton className="h-5 w-4/5 rounded-md bg-foreground/20" />
+        <Skeleton className="mt-2 h-3.5 w-2/5 rounded-md bg-foreground/20" />
+      </div>
+    </div>
+  )
+}
+
+function BooksSkeleton({ count }: { count: number }) {
+  return (
+    <div role="status" aria-busy="true">
+      <span className="sr-only">Loading books…</span>
+      <div
+        data-books-skeleton
+        className="grid grid-cols-2 gap-x-4 gap-y-12 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-5"
+      >
+        {Array.from({ length: count }).map((_, index) => (
+          <BookCardSkeleton key={index} />
+        ))}
+      </div>
     </div>
   )
 }
 
 export default function BooksPage() {
   const [activeTab, setActiveTab] = useState<"sample" | "mine">("sample")
-  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
   const prefersReducedMotion = useReducedMotion()
   const books: Book[] = activeTab === "sample" ? sampleBooks : myBooks
 
+  // Keep the skeleton grid the same size as the real grid so nothing jumps.
+  const skeletonCount = books.length > 0 ? books.length : 10
+
+  // Dummy fetch: show the book-card skeletons for 2s on every tab switch.
   useEffect(() => {
-    if (loadedTabs.has(activeTab)) {
-      setIsLoading(false)
-      return
-    }
     setIsLoading(true)
-    const timer = window.setTimeout(() => {
-      setLoadedTabs((tabs) => new Set(tabs).add(activeTab))
-      setIsLoading(false)
-    }, 2000)
+    const timer = window.setTimeout(() => setIsLoading(false), LOADING_DELAY_MS)
     return () => window.clearTimeout(timer)
-  }, [activeTab, loadedTabs])
+  }, [activeTab])
 
   const itemVariants = prefersReducedMotion
     ? undefined
@@ -100,7 +113,7 @@ export default function BooksPage() {
 
         <div data-books-item className="mt-10">
           {isLoading ? (
-            <LoadingGrid />
+            <BooksSkeleton count={skeletonCount} />
           ) : books.length === 0 && activeTab === "mine" ? (
             <div className="relative overflow-hidden rounded-3xl border border-foreground/10 bg-foreground/[0.025] px-6 py-16 text-center sm:px-10 sm:py-24">
               <div
