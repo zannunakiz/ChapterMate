@@ -1,3 +1,4 @@
+// Mirrors OldVersion's UploadSchema so /books/add validates identically.
 import { z } from "zod"
 import {
   ACCEPTED_IMAGE_TYPES,
@@ -6,50 +7,41 @@ import {
   MAX_IMAGE_SIZE,
 } from "@/lib/upload-constants"
 
-const fileSchema = z.custom<File>(
-  (value) => typeof File === "undefined" || value instanceof File,
-)
-
 export const UploadSchema = z.object({
-  pdfFile: fileSchema
+  title: z.string().min(1, "Title is required").max(100, "Title is too long"),
+  author: z
+    .string()
+    .min(1, "Author name is required")
+    .max(100, "Author name is too long"),
+  persona: z.string().min(1, "Please select a voice"),
+  pdfFile: z
+    .instanceof(File, { message: "PDF file is required" })
+    .refine(
+      (file) => file.size <= MAX_FILE_SIZE,
+      "File size must be less than 50MB",
+    )
     .refine(
       (file) =>
         ACCEPTED_PDF_TYPES.includes(
           file.type as (typeof ACCEPTED_PDF_TYPES)[number],
-        ) || file.name.toLowerCase().endsWith(".pdf"),
-      "Please upload a valid PDF file (.pdf).",
-    )
-    .refine(
-      (file) => file.size <= MAX_FILE_SIZE,
-      "File is too large. Maximum size is 50MB.",
+        ),
+      "Only PDF files are accepted",
     ),
-  coverImage: fileSchema
+  coverImage: z
+    .instanceof(File)
     .optional()
+    .refine(
+      (file) => !file || file.size <= MAX_IMAGE_SIZE,
+      "Image size must be less than 10MB",
+    )
     .refine(
       (file) =>
         !file ||
         ACCEPTED_IMAGE_TYPES.includes(
           file.type as (typeof ACCEPTED_IMAGE_TYPES)[number],
         ),
-      "Please upload a valid image file.",
-    )
-    .refine(
-      (file) => !file || file.size <= MAX_IMAGE_SIZE,
-      "Image is too large. Maximum size is 10MB.",
+      "Only .jpg, .jpeg, .png and .webp formats are supported",
     ),
-  title: z
-    .string()
-    .trim()
-    .min(1, "Title is required")
-    .max(25, "Title must be 25 characters or fewer"),
-  author: z
-    .string()
-    .trim()
-    .min(1, "Author name is required")
-    .max(25, "Author name must be 25 characters or fewer"),
-  persona: z.enum(["Dave", "Daniel", "Chris", "Rachel", "Sarah"], {
-    required_error: "Please select a voice",
-  }),
 })
 
 export type UploadFormValues = z.infer<typeof UploadSchema>

@@ -22,7 +22,7 @@ export function AddBookIntro() {
         variants={itemVariants}
         className="mb-4 text-xs uppercase tracking-[0.28em] text-muted-foreground"
       >
-        Your reading room / 01
+        Add your own
       </motion.p>
       <motion.h1
         variants={itemVariants}
