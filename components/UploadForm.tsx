@@ -1,10 +1,11 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion, useReducedMotion } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { FileText, ImagePlus, Mic2, Upload, X } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -13,13 +14,13 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
+  FormMessage
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { UploadSchema, type UploadFormValues } from "@/lib/schema"
 import {
   ACCEPTED_IMAGE_TYPES,
-  ACCEPTED_PDF_TYPES,
+  ACCEPTED_PDF_TYPES
 } from "@/lib/upload-constants"
 
 const voices = [
@@ -28,16 +29,16 @@ const voices = [
     options: [
       { name: "Dave", description: "Deep, warm, and steady" },
       { name: "Daniel", description: "Clear, confident, and articulate" },
-      { name: "Chris", description: "Bright, energetic, and friendly" },
-    ],
+      { name: "Chris", description: "Bright, energetic, and friendly" }
+    ]
   },
   {
     group: "Female Voices",
     options: [
       { name: "Rachel", description: "Soft, soothing, and melodic" },
-      { name: "Sarah", description: "Warm, expressive, and engaging" },
-    ],
-  },
+      { name: "Sarah", description: "Warm, expressive, and engaging" }
+    ]
+  }
 ] as const
 
 function formatFileSize(bytes: number) {
@@ -48,7 +49,7 @@ function formatFileSize(bytes: number) {
 
 function FileSummary({
   file,
-  onRemove,
+  onRemove
 }: {
   file?: File
   onRemove: () => void
@@ -77,24 +78,50 @@ function FileSummary({
   )
 }
 
-export default function UploadForm() {
+type UploadFormProps = {
+  /** FF_DUMMY_FORM, read on the server and passed down as a prop. */
+  dummyForm: boolean
+}
+
+export default function UploadForm({ dummyForm }: UploadFormProps) {
   const prefersReducedMotion = useReducedMotion()
   const pdfInputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [resetToken, setResetToken] = useState(0)
   const form = useForm<UploadFormValues>({
     resolver: zodResolver(UploadSchema),
-    defaultValues: { title: "", author: "", persona: undefined },
+    defaultValues: { title: "", author: "", persona: undefined }
   })
 
   const setFile = (field: "pdfFile" | "coverImage", file?: File) => {
     form.setValue(field, file, { shouldDirty: true, shouldValidate: true })
   }
 
+  // The file inputs are uncontrolled, so form.reset() alone leaves their native
+  // value behind; bumping the token clears them after a successful submit.
+  useEffect(() => {
+    if (resetToken === 0) return
+    if (pdfInputRef.current) pdfInputRef.current.value = ""
+    if (coverInputRef.current) coverInputRef.current.value = ""
+  }, [resetToken])
+
   const submit = async (data: UploadFormValues) => {
     setIsSubmitting(true)
+
+    // FF_DUMMY_FORM is false: the real database write is not wired up yet.
+    if (!dummyForm) {
+      toast.error("dummy feature is set to false")
+      setIsSubmitting(false)
+      return
+    }
+
+    // Dummy submit: pretend the upload and save succeeded, then clear the form.
     void data
     await new Promise((resolve) => setTimeout(resolve, 500))
+    toast.success("dummy submit success")
+    form.reset()
+    setResetToken((token) => token + 1)
     setIsSubmitting(false)
   }
 
@@ -103,7 +130,7 @@ export default function UploadForm() {
     : { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }
   const formVariants = {
     hidden: {},
-    visible: { transition: { staggerChildren: 0.08 } },
+    visible: { transition: { staggerChildren: 0.08 } }
   }
 
   return (
