@@ -1,6 +1,7 @@
 import { AddBookFormPanel } from "@/components/AddBookFormPanel"
 import { AddBookIntro } from "@/components/AddBookIntro"
 import { Navigation } from "@/components/landing/navigation"
+import { isDummyFormEnabled } from "@/lib/feature-flags"
 
 export default function AddBookPage() {
   return (
@@ -19,7 +20,7 @@ export default function AddBookPage() {
       </div>
       <div className="relative mx-auto max-w-3xl px-5 pb-28 pt-32 md:px-8 lg:pt-40">
         <AddBookIntro />
-        <AddBookFormPanel />
+        <AddBookFormPanel dummyForm={isDummyFormEnabled()} />
       </div>
     </main>
   )

@@ -33,3 +33,14 @@ export function isFeatureEnabled(
 export function isDummyBooksEnabled(): boolean {
   return isFeatureEnabled(process.env.FF_DUMMY_BOOKS, true)
 }
+
+/**
+ * FF_DUMMY_FORM — pretend the upload/save flow succeeded instead of writing the
+ * book to the database.
+ *
+ * The database path is not implemented yet, so this defaults to enabled; set
+ * FF_DUMMY_FORM=false to show the placeholder toast instead.
+ */
+export function isDummyFormEnabled(): boolean {
+  return isFeatureEnabled(process.env.FF_DUMMY_FORM, true)
+}

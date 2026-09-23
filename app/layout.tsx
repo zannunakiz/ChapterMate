@@ -1,4 +1,5 @@
 import { ClerkProvider } from '@clerk/nextjs'
+import { Toaster } from '@/components/ui/sonner'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import {
@@ -42,6 +43,7 @@ export default function RootLayout({
         className={`${instrumentSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <ClerkProvider dynamic>{children}</ClerkProvider>
+        <Toaster />
         <Analytics />
       </body>
     </html>
