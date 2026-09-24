@@ -1,0 +1,2 @@
+export const BOOK_TITLE_MAX_LENGTH = 20
+export const BOOK_AUTHOR_MAX_LENGTH = 20

@@ -13,6 +13,10 @@ import {
 import { Input } from "@/components/ui/input"
 import { UploadSchema, type UploadFormValues } from "@/lib/schema"
 import {
+  BOOK_AUTHOR_MAX_LENGTH,
+  BOOK_TITLE_MAX_LENGTH,
+} from "@/lib/book-validation"
+import {
   ACCEPTED_IMAGE_TYPES,
   ACCEPTED_PDF_TYPES
 } from "@/lib/upload-constants"
@@ -366,13 +370,13 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                 <FormControl>
                   <div>
                     <Input
-                      maxLength={100}
+                      maxLength={BOOK_TITLE_MAX_LENGTH}
                       disabled={isSubmitting}
                       placeholder="ex: Rich Dad Poor Dad"
                       {...field}
                     />
                     <p className="mt-1.5 text-right text-[11px] tabular-nums text-muted-foreground">
-                      {field.value.length}/100
+                      {field.value.length}/{BOOK_TITLE_MAX_LENGTH}
                     </p>
                   </div>
                 </FormControl>
@@ -389,13 +393,13 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                 <FormControl>
                   <div>
                     <Input
-                      maxLength={100}
+                      maxLength={BOOK_AUTHOR_MAX_LENGTH}
                       disabled={isSubmitting}
                       placeholder="ex: Robert Kiyosaki"
                       {...field}
                     />
                     <p className="mt-1.5 text-right text-[11px] tabular-nums text-muted-foreground">
-                      {field.value.length}/100
+                      {field.value.length}/{BOOK_AUTHOR_MAX_LENGTH}
                     </p>
                   </div>
                 </FormControl>

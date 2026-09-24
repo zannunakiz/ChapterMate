@@ -1,6 +1,10 @@
 // Mirrors OldVersion's UploadSchema so /books/add validates identically.
 import { z } from "zod"
 import {
+  BOOK_AUTHOR_MAX_LENGTH,
+  BOOK_TITLE_MAX_LENGTH,
+} from "@/lib/book-validation"
+import {
   ACCEPTED_IMAGE_TYPES,
   ACCEPTED_PDF_TYPES,
   MAX_FILE_SIZE,
@@ -8,11 +12,14 @@ import {
 } from "@/lib/upload-constants"
 
 export const UploadSchema = z.object({
-  title: z.string().min(1, "Title is required").max(100, "Title is too long"),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(BOOK_TITLE_MAX_LENGTH, "Title must be 20 characters or fewer"),
   author: z
     .string()
     .min(1, "Author name is required")
-    .max(100, "Author name is too long"),
+    .max(BOOK_AUTHOR_MAX_LENGTH, "Author name must be 20 characters or fewer"),
   persona: z.string().min(1, "Please select a voice"),
   pdfFile: z
     .instanceof(File, { message: "PDF file is required" })

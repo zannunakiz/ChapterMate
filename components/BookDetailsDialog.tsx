@@ -83,16 +83,22 @@ export function BookDetailsDialog({
                       }
                 }
                 data-dialog-item
-                className="pr-8"
+                className="min-w-0 overflow-hidden pr-8"
               >
                 <p className="mb-3 text-[8px] uppercase tracking-[0.28em] text-muted-foreground">
                   Book overview
                 </p>
-                <DialogTitle className="max-w-[18ch] font-display text-2xl leading-[1.05] tracking-tight sm:text-3xl lg:text-4xl">
+                <DialogTitle
+                  title={book.title}
+                  className="line-clamp-3 max-w-[18ch] break-words font-display text-2xl leading-[1.05] tracking-tight sm:text-3xl lg:text-4xl"
+                >
                   {book.title}
                 </DialogTitle>
-                <p className="mt-3 text-xs text-foreground/65 sm:text-sm">
-                  {book.author}{" "}
+                <p
+                  title={book.author}
+                  className="mt-3 truncate text-xs text-foreground/65 sm:text-sm"
+                >
+                  <span className="truncate">{book.author}</span>{" "}
                   <span className="px-2 text-muted-foreground">/</span>{" "}
                   {book.releaseYear}
                 </p>
