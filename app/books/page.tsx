@@ -32,10 +32,7 @@ function toCardBook(book: MongoBook): Book {
     author: book.author ?? "Unknown author",
     slug,
     coverURL: book.coverURL,
-    coverId: coverIdFromSlug(slug),
-    releaseYear: book.createdAt
-      ? new Date(book.createdAt).getFullYear()
-      : new Date().getFullYear()
+    coverId: coverIdFromSlug(slug)
   }
 }
 

@@ -6,7 +6,6 @@ export type Book = {
   coverURL?: string
   /** Bundled picsum id, used by the sample/dummy books. */
   coverId?: number
-  releaseYear: number
 }
 
 /**
@@ -40,7 +39,6 @@ export const sampleBooks: Book[] = [
   author,
   slug,
   coverId: index + 1,
-  releaseYear: 1813 + index * 12,
 }))
 
 export const myBooks: Book[] = [
@@ -58,7 +56,6 @@ export const myBooks: Book[] = [
   author,
   slug,
   coverId: index + 6,
-  releaseYear: 2015 + index * 2,
 }))
 
 // ============================================
@@ -141,3 +138,21 @@ export const VAPI_DASHBOARD_CONFIG = {
   backchannelingEnabled: true,
   fillerInjectionEnabled: false,
 }
+
+export const SAMPLE_BOOKS = [
+  {
+    title: "Jane Eyre",
+    author: "Charlotte Brontë",
+    clerkId: "sample-books"
+  },
+  {
+    title: "The Great Gatsby",
+    author: "F.S Fitzgerald",
+    clerkId: "sample-books"
+  },
+  {
+    title: "Dracula",
+    author: "Bram Stoker",
+    clerkId: "sample-books"
+  }
+];

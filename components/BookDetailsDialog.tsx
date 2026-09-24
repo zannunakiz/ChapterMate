@@ -98,9 +98,7 @@ export function BookDetailsDialog({
                   title={book.author}
                   className="mt-3 truncate text-xs text-foreground/65 sm:text-sm"
                 >
-                  <span className="truncate">{book.author}</span>{" "}
-                  <span className="px-2 text-muted-foreground">/</span>{" "}
-                  {book.releaseYear}
+                  {book.author}
                 </p>
               </motion.div>
               <motion.div
