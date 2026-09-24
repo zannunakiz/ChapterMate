@@ -1,0 +1,264 @@
+"use server";
+
+import BookSegment from "@/database/models/book-segment.model";
+import { Book } from "@/database/models/book.model";
+import { connectToDatabase } from "@/database/mongoose";
+import { CreateBook, TextSegment } from "@/types";
+import mongoose from "mongoose";
+import { escapeRegex, generateSlug, serializeData, splitIntoSegments } from "../utils";
+
+
+export const getAllBooks = async () => {
+   try {
+      await connectToDatabase()
+
+      const books = await Book.find().sort({ createdAt: -1 }).lean()
+
+      return {
+         success: true,
+         data: serializeData(books)
+      }
+
+   } catch (error) {
+      console.error("error Get All Books", error)
+      return { success: false, error }
+   }
+}
+
+
+export const checkBookExist = async (title: string) => {
+   try {
+      await connectToDatabase()
+
+      const slug = generateSlug(title)
+
+      const existingBook = await Book.findOne({ slug }).lean()
+
+      if (existingBook) {
+         return {
+            exists: true, book: serializeData(existingBook)
+         }
+      }
+
+   } catch (error) {
+      console.error("Error checking book exists")
+      return {
+         exists: false, error
+      }
+   }
+}
+
+export const createBook = async (data: CreateBook) => {
+   try {
+      await connectToDatabase();
+
+      const slug = generateSlug(data.title)
+
+      const existingBook = await Book.findOne({ slug }).lean()
+
+      if (existingBook) {
+         return {
+            success: true,
+            data: serializeData(existingBook),
+            alreadyExists: true
+         }
+      }
+
+      const book = await Book.create({ ...data, slug, totalSegments: 0 })
+
+      return {
+         success: true,
+         data: serializeData(book)
+      }
+
+   } catch (error) {
+      console.error("Error at createBook book.action.ts", error)
+      return {
+         error
+      }
+   }
+}
+
+export const getBookBySlug = async (slug: string) => {
+   try {
+      await connectToDatabase()
+
+      const book = await Book.findOne({ slug }).lean()
+
+      if (!book) return { success: false, data: null }
+
+      return {
+         success: true,
+         data: serializeData(book)
+      }
+   } catch (error) {
+      console.error("Error at getBookBySlug book.action.ts", error)
+      return { success: false, data: null }
+   }
+}
+
+// Saves the parsed book content as searchable segments.
+// Accepts either a raw string (segments it here) or pre-parsed TextSegment[] from parsePDFFile.
+export const saveBookSegments = async (
+   bookId: string,
+   clerkId: string,
+   content: string | TextSegment[],
+) => {
+   try {
+      await connectToDatabase();
+
+      if (!content || (typeof content === 'string' && content.trim().length === 0) || (Array.isArray(content) && content.length === 0)) {
+         return { success: false, error: 'Book content is empty' };
+      }
+
+      const bookObjectId = new mongoose.Types.ObjectId(bookId);
+
+      // Remove any previously saved segments for this book (idempotent re-upload)
+      await BookSegment.deleteMany({ bookId: bookObjectId });
+
+      const parsedSegments: TextSegment[] =
+         typeof content === 'string' ? splitIntoSegments(content) : content;
+
+      if (parsedSegments.length === 0) {
+         return { success: false, error: 'No segments generated from content' };
+      }
+
+      await BookSegment.insertMany(
+         parsedSegments.map((segment) => ({
+            clerkId,
+            bookId: bookObjectId,
+            content: segment.text,
+            segmentIndex: segment.segmentIndex,
+            wordCount: segment.wordCount,
+         })),
+      );
+
+      await Book.updateOne({ _id: bookObjectId }, { totalSegments: parsedSegments.length });
+
+      console.log(`Saved ${parsedSegments.length} segments for book ${bookId}`);
+
+      return {
+         success: true,
+         data: { count: parsedSegments.length },
+      };
+   } catch (error) {
+      console.error('Error at saveBookSegments book.action.ts', error);
+      return {
+         success: false,
+         error: (error as Error).message,
+      };
+   }
+};
+
+// Common English words that carry no meaning for retrieval — filtered out of search queries
+const STOPWORDS = new Set([
+   'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'her', 'was', 'one',
+   'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'man', 'new', 'now', 'old',
+   'see', 'two', 'way', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she', 'too',
+   'use', 'what', 'when', 'where', 'which', 'while', 'who', 'why', 'will', 'with',
+   'about', 'does', 'book', 'author', 'talks', 'talk', 'says', 'said', 'tell', 'tells',
+   'mention', 'mentions', 'write', 'writes', 'chapter', 'part', 'section', 'please',
+   'from', 'this', 'that', 'these', 'those', 'there', 'their', 'they', 'them', 'then',
+   'than', 'have', 'had', 'been', 'being', 'into', 'just', 'like', 'some', 'such',
+   'only', 'also', 'very', 'much', 'more', 'most', 'many', 'make', 'made', 'want',
+   'know', 'think', 'thing', 'things', 'really', 'actually', 'maybe', 'yeah', 'okay',
+   'read', 'reading', 'remember', 'question', 'anything', 'something', 'everything',
+]);
+
+// Extract meaningful keywords from a conversational query (e.g. from Vapi voice input)
+function extractKeywords(query: string): string[] {
+   const words = query
+      .toLowerCase()
+      .replace(/[^a-z0-9\s']/g, ' ')
+      .split(/\s+/)
+      .filter((w) => w.length > 2 && !STOPWORDS.has(w));
+
+   // Deduplicate
+   return [...new Set(words)];
+}
+
+// Searches book segments using MongoDB text search with keyword-based regex fallback
+export const searchBookSegments = async (bookId: string, query: string, limit: number = 5) => {
+   try {
+      await connectToDatabase();
+
+      console.log(`Searching for: "${query}" in book ${bookId}`);
+
+      const bookObjectId = new mongoose.Types.ObjectId(bookId);
+      const keywords = extractKeywords(query);
+
+      console.log(`Extracted keywords: [${keywords.join(', ')}]`);
+
+      if (keywords.length === 0) {
+         return { success: true, data: [] };
+      }
+
+      const projection = '_id bookId content segmentIndex pageNumber wordCount';
+
+      // Try MongoDB text search first (requires text index) using meaningful keywords only
+      let segments: Record<string, unknown>[] = [];
+      try {
+         segments = await BookSegment.find({
+            bookId: bookObjectId,
+            $text: { $search: keywords.join(' ') },
+         })
+            .select(projection)
+            .sort({ score: { $meta: 'textScore' } })
+            .limit(limit)
+            .lean();
+      } catch {
+         // Text index may not exist — fall through to regex fallback
+         segments = [];
+      }
+
+      // Fallback: regex search. Prefer segments matching the MOST keywords,
+      // not just the first ones by segment order.
+      if (segments.length === 0) {
+         const keywordRegexes = keywords.map((k) => new RegExp(escapeRegex(k), 'i'));
+
+         // 1st pass: segments containing ALL keywords (most specific)
+         segments = await BookSegment.find({
+            bookId: bookObjectId,
+            $and: keywordRegexes.map((regex) => ({ content: { $regex: regex } })),
+         })
+            .select(projection)
+            .sort({ segmentIndex: 1 })
+            .limit(limit)
+            .lean();
+
+         // 2nd pass: segments containing ANY keyword, ranked by how many keywords match
+         if (segments.length === 0) {
+            const anyMatches = await BookSegment.find({
+               bookId: bookObjectId,
+               $or: keywordRegexes.map((regex) => ({ content: { $regex: regex } })),
+            })
+               .select(projection)
+               .lean();
+
+            segments = anyMatches
+               .map((segment) => {
+                  const content = String((segment as { content?: string }).content ?? '').toLowerCase();
+                  const matchCount = keywordRegexes.filter((regex) => regex.test(content)).length;
+                  return { segment, matchCount };
+               })
+               .sort((a, b) => b.matchCount - a.matchCount)
+               .slice(0, limit)
+               .map(({ segment }) => segment);
+         }
+      }
+
+      console.log(`Search complete. Found ${segments.length} results`);
+
+      return {
+         success: true,
+         data: serializeData(segments),
+      };
+   } catch (error) {
+      console.error('Error searching segments:', error);
+      return {
+         success: false,
+         error: (error as Error).message,
+         data: [],
+      };
+   }
+};
