@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useRef } from "react"
 import { Mic } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -30,8 +29,8 @@ function Bubble({
         className={cn(
           "max-w-[88%] whitespace-pre-wrap rounded-2xl border px-4 py-3 text-sm leading-relaxed sm:max-w-[75%]",
           isUser
-            ? "rounded-br-sm border-foreground/15 bg-foreground text-background"
-            : "rounded-bl-sm border-foreground/10 bg-foreground/[0.03] text-foreground/90"
+            ? "rounded-br-sm border-foreground/25 bg-foreground text-background"
+            : "rounded-bl-sm border-foreground/20 bg-foreground/[0.03] text-foreground/90"
         )}
       >
         <span className="sr-only">{isUser ? "You: " : "Assistant: "}</span>
@@ -55,12 +54,6 @@ export function Transcript({
   currentMessage,
   currentUserMessage
 }: TranscriptProps) {
-  const bottomRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
-  }, [messages, currentMessage, currentUserMessage])
-
   const hasConversation =
     messages.length > 0 ||
     Boolean(currentMessage) ||
@@ -69,7 +62,7 @@ export function Transcript({
   if (!hasConversation) {
     return (
       <div className="flex h-full min-h-[260px] flex-col items-center justify-center gap-3 px-6 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full border border-foreground/10 bg-foreground/[0.04]">
+        <div className="flex size-12 items-center justify-center rounded-full border border-foreground/20 bg-foreground/[0.04]">
           <Mic className="size-5 text-muted-foreground" />
         </div>
         <p className="font-display text-xl tracking-tight sm:text-2xl">
@@ -104,8 +97,6 @@ export function Transcript({
       {currentMessage && (
         <Bubble content={currentMessage} isUser={false} streaming />
       )}
-
-      <div ref={bottomRef} />
     </div>
   )
 }

@@ -168,7 +168,18 @@ export function useVapi(book: IBook) {
          },
 
          error: (error: Error) => {
-            console.error('Vapi error:', error);
+            // Vapi reports the real reason inside a nested `error` payload, so
+            // that is what gets logged instead of an empty object.
+            const detail = error as unknown as {
+               error?: { message?: string };
+               message?: string;
+            };
+            const reason =
+               detail?.error?.message ||
+               detail?.message ||
+               JSON.stringify(error, Object.getOwnPropertyNames(error ?? {}));
+
+            console.error('Vapi error:', reason);
             // Don't reset isStoppingRef here - delayed events may still fire
             setStatus('idle');
             setCurrentMessage('');
@@ -189,7 +200,7 @@ export function useVapi(book: IBook) {
             }
 
             // Show user-friendly error message
-            const errorMessage = error.message?.toLowerCase() || '';
+            const errorMessage = (reason || '').toLowerCase();
             if (errorMessage.includes('timeout') || errorMessage.includes('silence')) {
                setLimitError('Session ended due to inactivity. Click the mic to start again.');
             } else if (errorMessage.includes('network') || errorMessage.includes('connection')) {

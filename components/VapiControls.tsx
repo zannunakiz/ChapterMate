@@ -63,9 +63,9 @@ export function VapiControls({ book }: { book: IBook }) {
         </p>
 
         <div className="grid gap-6 lg:grid-cols-[340px_1fr] lg:items-start lg:gap-8">
-          <section className="rounded-3xl border border-foreground/10 bg-foreground/[0.02] p-6 sm:p-7">
+          <section className="rounded-3xl border border-foreground/20 bg-foreground/[0.02] p-6 sm:p-7">
             <div className="flex items-start gap-5 lg:flex-col lg:items-stretch">
-              <div className="relative aspect-[2/3] w-20 shrink-0 overflow-hidden rounded-xl border border-foreground/10 bg-muted lg:w-full">
+              <div className="relative aspect-[2/3] w-20 shrink-0 overflow-hidden rounded-xl border border-foreground/20 bg-muted lg:w-full">
                 {coverSrc ? (
                   <img
                     src={coverSrc}
@@ -83,14 +83,14 @@ export function VapiControls({ book }: { book: IBook }) {
                 <p className="mt-1.5 text-xs text-muted-foreground sm:text-sm">
                   {book.author}
                 </p>
-                <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-foreground/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                <span className="mt-3 inline-flex items-center gap-2 rounded-full border border-foreground/20 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                   <Mic className="size-3" />
                   {voice.name}
                 </span>
               </div>
             </div>
 
-            <div className="mt-6 flex items-center justify-between border-t border-foreground/10 pt-5">
+            <div className="mt-6 flex items-center justify-between border-t border-foreground/15 pt-5">
               <span className="inline-flex items-center gap-2 text-xs">
                 <span
                   aria-hidden="true"
@@ -130,7 +130,7 @@ export function VapiControls({ book }: { book: IBook }) {
                     "relative flex size-[68px] items-center justify-center rounded-full border transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-50",
                     isActive
                       ? "border-foreground bg-foreground text-background hover:bg-foreground/85"
-                      : "border-foreground/20 bg-background text-foreground hover:border-foreground/50"
+                      : "border-foreground/30 bg-background text-foreground hover:border-foreground/60"
                   )}
                 >
                   {isActive ? (
@@ -158,8 +158,8 @@ export function VapiControls({ book }: { book: IBook }) {
             )}
           </section>
 
-          <section className="flex h-[60vh] min-h-[380px] flex-col overflow-hidden rounded-3xl border border-foreground/10 bg-foreground/[0.02] lg:h-[600px]">
-            <div className="flex items-center justify-between gap-3 border-b border-foreground/10 px-5 py-4 sm:px-6">
+          <section className="flex h-[60vh] min-h-[380px] flex-col overflow-hidden rounded-3xl border border-foreground/20 bg-foreground/[0.02] lg:h-[600px]">
+            <div className="flex items-center justify-between gap-3 border-b border-foreground/15 px-5 py-4 sm:px-6">
               <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
                 Conversation
               </p>
