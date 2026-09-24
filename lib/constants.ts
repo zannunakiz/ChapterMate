@@ -6,7 +6,6 @@ export type Book = {
   coverURL?: string
   /** Bundled picsum id, used by the sample/dummy books. */
   coverId?: number
-  releaseYear: number
 }
 
 /**
@@ -40,7 +39,6 @@ export const sampleBooks: Book[] = [
   author,
   slug,
   coverId: index + 1,
-  releaseYear: 1813 + index * 12,
 }))
 
 export const myBooks: Book[] = [
@@ -58,7 +56,6 @@ export const myBooks: Book[] = [
   author,
   slug,
   coverId: index + 6,
-  releaseYear: 2015 + index * 2,
 }))
 
 // ============================================
@@ -141,3 +138,30 @@ export const VAPI_DASHBOARD_CONFIG = {
   backchannelingEnabled: true,
   fillerInjectionEnabled: false,
 }
+
+export const SAMPLE_BOOKS = [
+  {
+    title: "Jane Eyre",
+    author: "Charlotte Brontë",
+    persona: "Rachel",
+    clerkId: "sample-books",
+    pdfPath: "lib/samples/Jane_Eyre.pdf",
+    coverPath: "lib/samples/Jane_Eyre.png",
+  },
+  {
+    title: "The Great Gatsby",
+    author: "F. Scott Fitzgerald",
+    persona: "Dave",
+    clerkId: "sample-books",
+    pdfPath: "lib/samples/The_Great_Gatsby.pdf",
+    coverPath: "lib/samples/The_Great_Gatsby.png",
+  },
+  {
+    title: "Dracula",
+    author: "Bram Stoker",
+    persona: "Sarah",
+    clerkId: "sample-books",
+    pdfPath: "lib/samples/Dracula.pdf",
+    coverPath: "lib/samples/Dracula.png",
+  }
+] as const

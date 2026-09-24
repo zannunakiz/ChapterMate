@@ -22,7 +22,7 @@ export function BookCard({ book, index, onSelect }: BookCardProps) {
       type="button"
       onClick={() => onSelect(book)}
       data-book-card
-      className="group block cursor-pointer transition-transform duration-500 hover:-translate-y-1"
+      className="group block min-w-0 cursor-pointer transition-transform duration-500 hover:-translate-y-1"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-foreground/10 bg-muted shadow-sm transition-all duration-500 group-hover:border-foreground/30 group-hover:shadow-[0_20px_45px_-28px_rgba(255,255,255,0.6)]">
@@ -34,11 +34,16 @@ export function BookCard({ book, index, onSelect }: BookCardProps) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
       </div>
-      <div className="pt-4">
-        <h2 className="font-display text-lg leading-tight tracking-tight text-foreground transition-colors group-hover:text-foreground/70">
+      <div className="min-w-0 overflow-hidden pt-4">
+        <h2
+          title={book.title}
+          className="truncate font-display text-lg leading-tight tracking-tight text-foreground transition-colors group-hover:text-foreground/70"
+        >
           {book.title}
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">{book.author}</p>
+        <p title={book.author} className="mt-1 truncate text-sm text-muted-foreground">
+          {book.author}
+        </p>
       </div>
     </motion.button>
   )

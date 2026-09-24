@@ -1,4 +1,4 @@
-import { TextSegment } from '@/types'
+import type { TextSegment } from '@/types'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { DEFAULT_VOICE, voiceOptions } from './constants'
@@ -61,17 +61,47 @@ export const splitIntoSegments = (
   return segments
 }
 
-export const getVoice = (persona?: string) => {
-  if (!persona) return voiceOptions[DEFAULT_VOICE]
+export type VoiceKey = keyof typeof voiceOptions
 
-  const voiceEntry = Object.values(voiceOptions).find((v) => v.id === persona)
-  if (voiceEntry) return voiceEntry
+const voiceKeys = new Set<string>(Object.keys(voiceOptions))
 
-  const voiceByKey = voiceOptions[persona as keyof typeof voiceOptions]
-  if (voiceByKey) return voiceByKey
+// Maps a lowercased display name ("dave" for "Dave") to its voiceOptions key.
+const voiceKeyByDisplayName = new Map<string, VoiceKey>(
+  Object.entries(voiceOptions).map(([key, voice]) => [
+    voice.name.toLowerCase(),
+    key as VoiceKey,
+  ]),
+)
 
-  return voiceOptions[DEFAULT_VOICE]
+/**
+ * Resolves a stored book `persona` to a canonical `voiceOptions` key.
+ *
+ * Books have been saved with both the canonical key ("dave") and the display
+ * name ("Dave"), so the key, the display name and a raw ElevenLabs voice id
+ * are all accepted (keys and names are matched case-insensitively). Anything
+ * unrecognised falls back to DEFAULT_VOICE.
+ */
+export const getVoiceKey = (persona?: string): VoiceKey => {
+  if (!persona) return DEFAULT_VOICE
+
+  const trimmed = persona.trim()
+  const normalized = trimmed.toLowerCase()
+
+  if (voiceKeys.has(normalized)) return normalized as VoiceKey
+
+  const keyByDisplayName = voiceKeyByDisplayName.get(normalized)
+  if (keyByDisplayName) return keyByDisplayName
+
+  const keyByVoiceId = Object.entries(voiceOptions).find(
+    ([, voice]) => voice.id === trimmed,
+  )?.[0]
+
+  if (keyByVoiceId) return keyByVoiceId as VoiceKey
+
+  return DEFAULT_VOICE
 }
+
+export const getVoice = (persona?: string) => voiceOptions[getVoiceKey(persona)]
 
 export const formatDuration = (seconds: number): string => {
   const mins = Math.floor(seconds / 60)

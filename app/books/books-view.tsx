@@ -8,9 +8,10 @@ import { BookDetailsDialog } from "@/components/BookDetailsDialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Navigation } from "@/components/landing/navigation"
-import { sampleBooks, type Book } from "@/lib/constants"
+import { type Book } from "@/lib/constants"
 
 type BooksViewProps = {
+  sampleBooks: Book[]
   /** "My Books" tab data — the bundled samples or the signed-in user's books. */
   myBooks: Book[]
   /** True when "My Books" reads from the database and so needs a signed-in user. */
@@ -55,7 +56,11 @@ function BooksSkeleton() {
   )
 }
 
-export function BooksView({ myBooks, myBooksRequireAuth }: BooksViewProps) {
+export function BooksView({
+  sampleBooks,
+  myBooks,
+  myBooksRequireAuth,
+}: BooksViewProps) {
   const { isLoaded, isSignedIn } = useAuth()
   const [activeTab, setActiveTab] = useState<"sample" | "mine">("sample")
   const [isLoading, setIsLoading] = useState(true)
