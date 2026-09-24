@@ -7,7 +7,7 @@ import Vapi from '@vapi-ai/web';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { endVoiceSession, startVoiceSession } from '@/lib/actions/session.action';
-import { ASSISTANT_ID, DEFAULT_VOICE, VOICE_SETTINGS } from '@/lib/constants';
+import { ASSISTANT_ID, VOICE_SETTINGS } from '@/lib/constants';
 import { getVoice } from '@/lib/utils';
 import { IBook, Messages } from '@/types';
 
@@ -56,7 +56,9 @@ export function useVapi(book: IBook) {
    // Keep refs in sync with latest values for use in callbacks
    // const maxDurationRef = useLatestRef(limits.maxSessionMinutes * 60);
    const durationRef = useLatestRef(duration);
-   const voice = book.persona || DEFAULT_VOICE;
+   // The stored persona may be a voice key, a display name or a raw voice id,
+   // so resolve it through getVoice (which falls back to DEFAULT_VOICE).
+   const voice = getVoice(book.persona);
 
     // Set up Vapi event listeners
    useEffect(() => {
@@ -269,7 +271,7 @@ export function useVapi(book: IBook) {
             },
             voice: {
                provider: '11labs' as const,
-               voiceId: getVoice(voice).id,
+               voiceId: voice.id,
                model: 'eleven_turbo_v2_5' as const,
                stability: VOICE_SETTINGS.stability,
                similarityBoost: VOICE_SETTINGS.similarityBoost,
@@ -282,7 +284,7 @@ export function useVapi(book: IBook) {
          setStatus('idle');
          setLimitError('Failed to start voice session. Please try again.');
       }
-   }, [book._id, book.title, book.author, voice, userId]);
+   }, [book._id, book.title, book.author, voice.id, userId]);
 
    const stop = useCallback(() => {
       isStoppingRef.current = true;

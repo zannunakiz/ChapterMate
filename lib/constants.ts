@@ -143,16 +143,25 @@ export const SAMPLE_BOOKS = [
   {
     title: "Jane Eyre",
     author: "Charlotte Brontë",
-    clerkId: "sample-books"
+    persona: "Rachel",
+    clerkId: "sample-books",
+    pdfPath: "lib/samples/Jane_Eyre.pdf",
+    coverPath: "lib/samples/Jane_Eyre.png",
   },
   {
     title: "The Great Gatsby",
-    author: "F.S Fitzgerald",
-    clerkId: "sample-books"
+    author: "F. Scott Fitzgerald",
+    persona: "Dave",
+    clerkId: "sample-books",
+    pdfPath: "lib/samples/The_Great_Gatsby.pdf",
+    coverPath: "lib/samples/The_Great_Gatsby.png",
   },
   {
     title: "Dracula",
     author: "Bram Stoker",
-    clerkId: "sample-books"
+    persona: "Sarah",
+    clerkId: "sample-books",
+    pdfPath: "lib/samples/Dracula.pdf",
+    coverPath: "lib/samples/Dracula.png",
   }
-];
+] as const

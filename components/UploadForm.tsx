@@ -25,7 +25,7 @@ import {
   createBook,
   saveBookSegments
 } from "@/lib/actions/book.action"
-import { parsePDFFile } from "@/lib/utils"
+import { parsePDFFile, type VoiceKey } from "@/lib/utils"
 import { useAuth } from "@clerk/nextjs"
 import { upload } from "@vercel/blob/client"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -36,23 +36,32 @@ import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 
-const voices = [
+// `key` is the canonical value persisted as Book.persona (see voiceOptions in
+// lib/constants.ts); `name` is only for display. Keep them in sync.
+const voices: ReadonlyArray<{
+  group: string
+  options: ReadonlyArray<{
+    key: VoiceKey
+    name: string
+    description: string
+  }>
+}> = [
   {
     group: "Male Voices",
     options: [
-      { name: "Dave", description: "Deep, warm, and steady" },
-      { name: "Daniel", description: "Clear, confident, and articulate" },
-      { name: "Chris", description: "Bright, energetic, and friendly" }
+      { key: "dave", name: "Dave", description: "Deep, warm, and steady" },
+      { key: "daniel", name: "Daniel", description: "Clear, confident, and articulate" },
+      { key: "chris", name: "Chris", description: "Bright, energetic, and friendly" }
     ]
   },
   {
     group: "Female Voices",
     options: [
-      { name: "Rachel", description: "Soft, soothing, and melodic" },
-      { name: "Sarah", description: "Warm, expressive, and engaging" }
+      { key: "rachel", name: "Rachel", description: "Soft, soothing, and melodic" },
+      { key: "sarah", name: "Sarah", description: "Warm, expressive, and engaging" }
     ]
   }
-] as const
+]
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
@@ -426,26 +435,29 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                           {group.group}
                         </legend>
                         <div className="grid gap-3 sm:grid-cols-3">
-                          {group.options.map((voice) => (
-                            <button
-                              key={voice.name}
-                              type="button"
-                              aria-pressed={field.value === voice.name}
-                              onClick={() => field.onChange(voice.name)}
-                              disabled={isSubmitting}
-                              className={`rounded-xl border px-4 py-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${field.value === voice.name ? "border-foreground bg-foreground text-background" : "border-foreground/10 hover:border-foreground/40"}`}
-                            >
-                              <span className="flex items-center gap-2 text-sm">
-                                <Mic2 className="size-3.5" />
-                                {voice.name}
-                              </span>
-                              <span
-                                className={`mt-1 block text-xs ${field.value === voice.name ? "text-background/70" : "text-muted-foreground"}`}
+                          {group.options.map((voice) => {
+                            const isSelected = field.value === voice.key
+                            return (
+                              <button
+                                key={voice.key}
+                                type="button"
+                                aria-pressed={isSelected}
+                                onClick={() => field.onChange(voice.key)}
+                                disabled={isSubmitting}
+                                className={`rounded-xl border px-4 py-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${isSelected ? "border-foreground bg-foreground text-background" : "border-foreground/10 hover:border-foreground/40"}`}
                               >
-                                {voice.description}
-                              </span>
-                            </button>
-                          ))}
+                                <span className="flex items-center gap-2 text-sm">
+                                  <Mic2 className="size-3.5" />
+                                  {voice.name}
+                                </span>
+                                <span
+                                  className={`mt-1 block text-xs ${isSelected ? "text-background/70" : "text-muted-foreground"}`}
+                                >
+                                  {voice.description}
+                                </span>
+                              </button>
+                            )
+                          })}
                         </div>
                       </fieldset>
                     ))}
