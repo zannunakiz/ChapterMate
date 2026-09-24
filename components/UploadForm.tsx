@@ -70,6 +70,38 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+// How long the success toast stays on screen before we navigate to /books.
+const SUCCESS_REDIRECT_DELAY_MS = 2000
+
+/**
+ * Server actions report failures as `{ error }`, which can be an Error, a
+ * Mongoose error object or a plain string (see saveBookSegments), and the Blob
+ * client throws — this normalises all of them into one readable line.
+ */
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error === "string") return error.trim() || fallback
+
+  if (error && typeof error === "object" && "message" in error) {
+    const { message } = error as { message?: unknown }
+    if (typeof message === "string" && message.trim()) return message
+  }
+
+  return fallback
+}
+
+/** Mongo's unique-index violation (E11000), i.e. that slug is already taken. */
+function isDuplicateKeyError(error: unknown): boolean {
+  if (!error || typeof error !== "object" || !("code" in error)) return false
+  return (error as { code?: unknown }).code === 11000
+}
+
+/** Duplicate titles are a failure: stay on the page, never redirect. */
+function notifyDuplicateTitle(title: string) {
+  toast.error(
+    `A book titled "${title}" already exists. Please use a different title.`
+  )
+}
+
 function FileSummary({
   file,
   onRemove,
@@ -128,6 +160,10 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
   })
   // React Hook Form owns the submit lifecycle, so this also covers validation.
   const { isSubmitting } = form.formState
+  // Held true from the success toast until the redirect lands, so the form stays
+  // locked while we are on our way to /books.
+  const [isRedirecting, setIsRedirecting] = useState(false)
+  const submitting = isSubmitting || isRedirecting
 
   const setFile = (field: "pdfFile" | "coverImage", file?: File) => {
     form.setValue(field, file, { shouldDirty: true, shouldValidate: true })
@@ -143,9 +179,11 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
 
   const submit = async (data: UploadFormValues) => {
     // Belt and braces: the submit button is disabled, but Enter can re-submit.
-    if (isSubmitting) return
+    if (submitting) return
 
-    // FF_DUMMY_FORM on: pretend the upload and save succeeded, then clear.
+    // FF_DUMMY_FORM on: pretend the upload and save succeeded, then clear. This
+    // dev-only path deliberately stays on the page — there is no real book to
+    // show in /books.
     if (dummyForm) {
       void data
       await new Promise((resolve) => setTimeout(resolve, 500))
@@ -161,14 +199,21 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
     }
 
     try {
-      // 1. Same title/slug already saved?
+      // 1. Same title/slug already saved? A duplicate is a failure, so stay on
+      // this page and let the user correct the title.
       const existsCheck = await checkBookExist(data.title)
 
+      if (existsCheck?.error) {
+        // The lookup itself failed (e.g. the database is unreachable): abort
+        // rather than upload a book we could not verify.
+        toast.error(
+          `Could not check for an existing book: ${getErrorMessage(existsCheck.error, "please try again.")}`
+        )
+        return
+      }
+
       if (existsCheck?.exists && existsCheck.book) {
-        toast.info("Book with same title already exists")
-        form.reset()
-        setResetToken((token) => token + 1)
-        router.push(`/books/${existsCheck.book.slug}`)
+        notifyDuplicateTitle(data.title)
         return
       }
 
@@ -218,7 +263,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
       }
 
       // 5. Save the book record.
-      const book = await createBook({
+      const bookResult = await createBook({
         clerkId: userId,
         title: data.title,
         author: data.author,
@@ -229,24 +274,56 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
         fileSize: data.pdfFile.size
       })
 
-      if (!book.success || !book.data) throw new Error("Failed to create book")
+      // The slug may have been claimed between the check in step 1 and here.
+      if (bookResult.alreadyExists) {
+        notifyDuplicateTitle(data.title)
+        return
+      }
+
+      if (!bookResult.success || !bookResult.data) {
+        toast.error(
+          `Failed to save the book: ${getErrorMessage(bookResult.error, "unexpected error, please try again.")}`
+        )
+        return
+      }
 
       // 6. Save the searchable segments.
-      const segments = await saveBookSegments(
-        String(book.data._id),
+      const segmentsResult = await saveBookSegments(
+        String(bookResult.data._id),
         userId,
         parsedPDF.content
       )
 
-      if (!segments.success) throw new Error("Failed to save book segments")
+      if (!segmentsResult.success) {
+        toast.error(
+          `Failed to save the book content: ${getErrorMessage(segmentsResult.error, "unexpected error, please try again.")}`
+        )
+        return
+      }
 
+      // 7. Success: confirm, then leave the toast on screen for a moment before
+      // handing the user over to their library.
+      setIsRedirecting(true)
       toast.success("Book added successfully")
       form.reset()
       setResetToken((token) => token + 1)
+      await new Promise((resolve) =>
+        setTimeout(resolve, SUCCESS_REDIRECT_DELAY_MS)
+      )
       router.push("/books")
     } catch (error) {
       console.error("Error while submitting", error)
-      toast.error("Error while submit")
+
+      // Unique-index violation on `slug`: the title was taken by a parallel
+      // submit after the checks above, so it is still just a failed upload.
+      if (isDuplicateKeyError(error)) {
+        notifyDuplicateTitle(data.title)
+        return
+      }
+
+      toast.error(
+        `Failed to add the book: ${getErrorMessage(error, "unexpected error, please try again.")}`
+      )
     }
   }
 
@@ -290,7 +367,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                       data-form-item
                       type="button"
                       onClick={() => pdfInputRef.current?.click()}
-                      disabled={isSubmitting}
+                      disabled={submitting}
                       className="flex w-full items-center gap-4 rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-left transition-colors hover:border-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Upload className="size-5 text-muted-foreground" />
@@ -305,7 +382,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                     </button>
                     <FileSummary
                       file={field.value}
-                      disabled={isSubmitting}
+                      disabled={submitting}
                       onRemove={() => {
                         setFile("pdfFile", undefined)
                         if (pdfInputRef.current) pdfInputRef.current.value = ""
@@ -340,7 +417,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                       data-form-item
                       type="button"
                       onClick={() => coverInputRef.current?.click()}
-                      disabled={isSubmitting}
+                      disabled={submitting}
                       className="flex w-full items-center gap-4 rounded-2xl border border-dashed border-foreground/20 px-5 py-6 text-left transition-colors hover:border-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <ImagePlus className="size-5 text-muted-foreground" />
@@ -353,7 +430,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                     </button>
                     <FileSummary
                       file={field.value}
-                      disabled={isSubmitting}
+                      disabled={submitting}
                       onRemove={() => {
                         setFile("coverImage", undefined)
                         if (coverInputRef.current)
@@ -381,7 +458,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                   <div>
                     <Input
                       maxLength={BOOK_TITLE_MAX_LENGTH}
-                      disabled={isSubmitting}
+                      disabled={submitting}
                       placeholder="ex: Rich Dad Poor Dad"
                       {...field}
                     />
@@ -404,7 +481,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                   <div>
                     <Input
                       maxLength={BOOK_AUTHOR_MAX_LENGTH}
-                      disabled={isSubmitting}
+                      disabled={submitting}
                       placeholder="ex: Robert Kiyosaki"
                       {...field}
                     />
@@ -444,7 +521,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                                 type="button"
                                 aria-pressed={isSelected}
                                 onClick={() => field.onChange(voice.key)}
-                                disabled={isSubmitting}
+                                disabled={submitting}
                                 className={`rounded-xl border px-4 py-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${isSelected ? "border-foreground bg-foreground text-background" : "border-foreground/10 hover:border-foreground/40"}`}
                               >
                                 <span className="flex items-center gap-2 text-sm">
@@ -476,10 +553,10 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
           <Button
             data-form-item
             type="submit"
-            disabled={isSubmitting}
+            disabled={submitting}
             className="h-11 w-full rounded-full sm:w-auto"
           >
-            {isSubmitting ? "Submitting..." : "Submit Book"}
+            {submitting ? "Submitting..." : "Submit Book"}
           </Button>
         </motion.div>
       </motion.form>
