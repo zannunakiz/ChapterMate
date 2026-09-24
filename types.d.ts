@@ -46,7 +46,6 @@ export interface IVoiceSession extends Document {
    startedAt: Date;
    endedAt?: Date;
    durationSeconds: number;
-   billingPeriodStart: Date;
    createdAt: Date;
    updatedAt: Date;
 }
@@ -122,15 +121,6 @@ export interface FileUploadFieldProps<T extends FieldValues> {
 
 
 // SESSION TYPES
-
-interface SessionCheckResult {
-   allowed: boolean;
-   currentCount: number;
-   limit: number;
-   plan: PlanType;
-   maxDurationMinutes: number;
-   error?: string;
-}
 
 interface StartSessionResult {
    success: boolean;
