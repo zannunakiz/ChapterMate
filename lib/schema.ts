@@ -25,7 +25,7 @@ export const UploadSchema = z.object({
     .instanceof(File, { message: "PDF file is required" })
     .refine(
       (file) => file.size <= MAX_FILE_SIZE,
-      "File size must be less than 50MB",
+      "File size must be less than 10MB",
     )
     .refine(
       (file) =>
@@ -39,7 +39,7 @@ export const UploadSchema = z.object({
     .optional()
     .refine(
       (file) => !file || file.size <= MAX_IMAGE_SIZE,
-      "Image size must be less than 10MB",
+      "Image size must be less than 1MB",
     )
     .refine(
       (file) =>

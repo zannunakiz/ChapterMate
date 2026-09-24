@@ -25,7 +25,7 @@ export async function POST(request: Request): Promise<NextResponse> {
             }
 
             return {
-               allowedContentTypes: ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'],
+               allowedContentTypes: ['application/pdf'],
                addRandomSuffix: true,
                maximumSizeInBytes: MAX_FILE_SIZE,
                tokenPayload: JSON.stringify({ userId })

@@ -102,6 +102,17 @@ function notifyDuplicateTitle(title: string) {
   )
 }
 
+function truncateFileName(fileName: string, maxBaseLength = 15) {
+  const extensionIndex = fileName.lastIndexOf(".")
+  const hasExtension = extensionIndex > 0
+  const baseName = hasExtension ? fileName.slice(0, extensionIndex) : fileName
+  const extension = hasExtension ? fileName.slice(extensionIndex) : ""
+
+  return baseName.length > maxBaseLength
+    ? `${baseName.slice(0, maxBaseLength)}...${extension}`
+    : fileName
+}
+
 function FileSummary({
   file,
   onRemove,
@@ -112,13 +123,17 @@ function FileSummary({
   disabled?: boolean
 }) {
   if (!file) return null
+  const displayName = truncateFileName(file.name)
+
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-foreground/10 bg-muted/30 px-4 py-3">
       <div className="flex min-w-0 items-center gap-3">
         <FileText className="size-4 shrink-0 text-muted-foreground" />
         <div className="min-w-0">
-          <p className="truncate text-sm text-foreground">{file.name}</p>
-          <p className="text-xs text-muted-foreground">
+          <p title={file.name} className="truncate text-[13px] text-foreground lg:text-sm">
+            {displayName}
+          </p>
+          <p className="text-[11px] text-muted-foreground lg:text-xs">
             {formatFileSize(file.size)}
           </p>
         </div>
@@ -238,11 +253,11 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
 
       if (data.coverImage) {
         const uploadedCoverBlob = await upload(
-          `${fileTitle}-cover.png`,
+          `${fileTitle}-cover.jpg`,
           data.coverImage,
           {
             access: "public",
-            handleUploadUrl: "/api/upload",
+            handleUploadUrl: "/api/upload/cover",
             contentType: data.coverImage.type
           }
         )
@@ -255,8 +270,8 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
           coverBlob,
           {
             access: "public",
-            handleUploadUrl: "/api/upload",
-            contentType: "image/png"
+            handleUploadUrl: "/api/upload/cover",
+            contentType: "image/jpeg"
           }
         )
         coverUrl = uploadedCoverBlob.url
@@ -342,7 +357,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
         animate="visible"
         variants={formVariants}
         onSubmit={form.handleSubmit(submit)}
-        className="space-y-8"
+        className="space-y-8 max-lg:[&_[data-slot=form-description]]:text-[13px] max-lg:[&_[data-slot=form-label]]:text-[13px] max-lg:[&_[data-slot=form-message]]:text-[13px] max-lg:[&_[data-slot=input]]:text-[13px] max-lg:[&_[data-slot=button]]:text-[13px]"
       >
         <motion.div variants={formItemVariants}>
           {" "}
@@ -372,10 +387,10 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                     >
                       <Upload className="size-5 text-muted-foreground" />
                       <span>
-                        <span className="block text-sm">
-                          PDF file (max 50MB)
+                        <span className="block text-[13px] lg:text-sm">
+                          PDF file (max 10MB)
                         </span>
-                        <span className="mt-1 block text-xs text-muted-foreground">
+                        <span className="mt-1 block text-[11px] text-muted-foreground lg:text-xs">
                           Choose a PDF to begin
                         </span>
                       </span>
@@ -422,9 +437,9 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                     >
                       <ImagePlus className="size-5 text-muted-foreground" />
                       <span>
-                        <span className="block text-sm">Book Cover</span>
-                        <span className="mt-1 block text-xs text-muted-foreground">
-                          Leave empty to auto-generate from PDF
+                        <span className="block text-[13px] lg:text-sm">Book Cover</span>
+                        <span className="mt-1 block text-[11px] text-muted-foreground lg:text-xs">
+                          Leave empty to auto-generate from PDF (max 1MB)
                         </span>
                       </span>
                     </button>
@@ -462,7 +477,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                       placeholder="ex: Rich Dad Poor Dad"
                       {...field}
                     />
-                    <p className="mt-1.5 text-right text-[11px] tabular-nums text-muted-foreground">
+                    <p className="mt-1.5 text-right text-[10px] tabular-nums text-muted-foreground lg:text-[11px]">
                       {field.value.length}/{BOOK_TITLE_MAX_LENGTH}
                     </p>
                   </div>
@@ -485,7 +500,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                       placeholder="ex: Robert Kiyosaki"
                       {...field}
                     />
-                    <p className="mt-1.5 text-right text-[11px] tabular-nums text-muted-foreground">
+                    <p className="mt-1.5 text-right text-[10px] tabular-nums text-muted-foreground lg:text-[11px]">
                       {field.value.length}/{BOOK_AUTHOR_MAX_LENGTH}
                     </p>
                   </div>
@@ -509,7 +524,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                   <div data-form-item className="space-y-5">
                     {voices.map((group) => (
                       <fieldset key={group.group}>
-                        <legend className="mb-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                        <legend className="mb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground lg:text-xs">
                           {group.group}
                         </legend>
                         <div className="grid gap-3 sm:grid-cols-3">
@@ -524,12 +539,12 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
                                 disabled={submitting}
                                 className={`rounded-xl border px-4 py-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${isSelected ? "border-foreground bg-foreground text-background" : "border-foreground/10 hover:border-foreground/40"}`}
                               >
-                                <span className="flex items-center gap-2 text-sm">
+                                <span className="flex items-center gap-2 text-[13px] lg:text-sm">
                                   <Mic2 className="size-3.5" />
                                   {voice.name}
                                 </span>
                                 <span
-                                  className={`mt-1 block text-xs ${isSelected ? "text-background/70" : "text-muted-foreground"}`}
+                                  className={`mt-1 block text-[11px] lg:text-xs ${isSelected ? "text-background/70" : "text-muted-foreground"}`}
                                 >
                                   {voice.description}
                                 </span>

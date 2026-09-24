@@ -1,7 +1,8 @@
 "use client"
 
-import { ArrowUpRight } from "lucide-react"
+import { ArrowUpRight, Github, Instagram, Mail } from "lucide-react"
 import { useEffect, useRef } from "react"
+import { toast } from "sonner"
 
 type FooterLink = {
   name: string
@@ -28,6 +29,24 @@ const socialLinks = [
   { name: "Instagram", href: "https://www.instagram.com/richky_4srg" },
   { name: "Email", href: "mailto:richky.abednego@gmail.com" },
 ]
+
+const EMAIL_ADDRESS = "richky.abednego@gmail.com"
+
+function ContactIcon({ name }: { name: string }) {
+  const Icon =
+    name === "Instagram" ? Instagram : name === "GitHub" ? Github : Mail
+
+  return <Icon aria-hidden="true" className="size-3.5 shrink-0" />
+}
+
+async function copyEmail() {
+  try {
+    await navigator.clipboard.writeText(EMAIL_ADDRESS)
+    toast.success("Email copied to clipboard")
+  } catch {
+    toast.error("Could not copy email. Please try again.")
+  }
+}
 
 function AnimatedWaveCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -122,14 +141,29 @@ export function FooterSection() {
               {/* Social Links */}
               <div className="flex gap-6">
                 {socialLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    className="text-sm text-white/40 hover:text-white transition-colors flex items-center gap-1 group"
-                  >
-                    {link.name}
-                    <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
-                  </a>
+                  link.name === "Email" ? (
+                    <button
+                      key={link.name}
+                      type="button"
+                      onClick={copyEmail}
+                      className="text-sm text-white/40 hover:text-white transition-colors flex items-center gap-1 group"
+                    >
+                      <ContactIcon name={link.name} />
+                      {link.name}
+                    </button>
+                  ) : (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-white/40 hover:text-white transition-colors flex items-center gap-1 group"
+                    >
+                      <ContactIcon name={link.name} />
+                      {link.name}
+                      <ArrowUpRight className="w-3 h-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+                    </a>
+                  )
                 ))}
               </div>
             </div>
@@ -141,17 +175,31 @@ export function FooterSection() {
                 <ul className="space-y-4">
                   {links.map((link) => (
                     <li key={link.name}>
-                      <a
-                        href={link.href}
-                        className="text-sm text-white/40 hover:text-white transition-colors inline-flex items-center gap-2"
-                      >
-                        {link.name}
-                        {"badge" in link && link.badge && (
-                          <span className="text-xs px-2 py-0.5 bg-white text-black rounded-full">
-                            {link.badge}
-                          </span>
-                        )}
-                      </a>
+                      {title === "Connect" && link.name === "Email" ? (
+                        <button
+                          type="button"
+                          onClick={copyEmail}
+                          className="text-sm text-white/40 hover:text-white transition-colors inline-flex items-center gap-2"
+                        >
+                          <ContactIcon name={link.name} />
+                          {link.name}
+                        </button>
+                      ) : (
+                        <a
+                          href={link.href}
+                          target={title === "Connect" ? "_blank" : undefined}
+                          rel={title === "Connect" ? "noopener noreferrer" : undefined}
+                          className="text-sm text-white/40 hover:text-white transition-colors inline-flex items-center gap-2"
+                        >
+                          {title === "Connect" && <ContactIcon name={link.name} />}
+                          {link.name}
+                          {"badge" in link && link.badge && (
+                            <span className="text-xs px-2 py-0.5 bg-white text-black rounded-full">
+                              {link.badge}
+                            </span>
+                          )}
+                        </a>
+                      )}
                     </li>
                   ))}
                 </ul>

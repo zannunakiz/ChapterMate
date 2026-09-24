@@ -145,7 +145,9 @@ export async function parsePDFFile(file: File) {
       viewport,
     }).promise
 
-    const coverDataURL = canvas.toDataURL('image/png')
+    // JPEG keeps the automatic PDF-page cover comfortably within the 1 MB
+    // cover-upload limit while preserving a clear preview image.
+    const coverDataURL = canvas.toDataURL('image/jpeg', 0.8)
 
     let fullText = ''
 
