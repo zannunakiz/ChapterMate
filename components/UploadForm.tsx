@@ -16,9 +16,18 @@ import {
   ACCEPTED_IMAGE_TYPES,
   ACCEPTED_PDF_TYPES
 } from "@/lib/upload-constants"
+import {
+  checkBookExist,
+  createBook,
+  saveBookSegments
+} from "@/lib/actions/book.action"
+import { parsePDFFile } from "@/lib/utils"
+import { useAuth } from "@clerk/nextjs"
+import { upload } from "@vercel/blob/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion, useReducedMotion } from "framer-motion"
 import { FileText, ImagePlus, Mic2, Upload, X } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -87,6 +96,8 @@ type UploadFormProps = {
 }
 
 export default function UploadForm({ dummyForm }: UploadFormProps) {
+  const router = useRouter()
+  const { userId } = useAuth()
   const prefersReducedMotion = useReducedMotion()
   const pdfInputRef = useRef<HTMLInputElement>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -120,18 +131,109 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
     // Belt and braces: the submit button is disabled, but Enter can re-submit.
     if (isSubmitting) return
 
-    // FF_DUMMY_FORM is false: the real database write is not wired up yet.
-    if (!dummyForm) {
-      toast.error("dummy feature is set to false")
+    // FF_DUMMY_FORM on: pretend the upload and save succeeded, then clear.
+    if (dummyForm) {
+      void data
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      toast.success("dummy submit success")
+      form.reset()
+      setResetToken((token) => token + 1)
       return
     }
 
-    // Dummy submit: pretend the upload and save succeeded, then clear the form.
-    void data
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    toast.success("dummy submit success")
-    form.reset()
-    setResetToken((token) => token + 1)
+    if (!userId) {
+      toast.error("You need to log in")
+      return
+    }
+
+    try {
+      // 1. Same title/slug already saved?
+      const existsCheck = await checkBookExist(data.title)
+
+      if (existsCheck?.exists && existsCheck.book) {
+        toast.info("Book with same title already exists")
+        form.reset()
+        setResetToken((token) => token + 1)
+        router.push(`/books/${existsCheck.book.slug}`)
+        return
+      }
+
+      // 2. Read the PDF: searchable segments plus a page-1 cover.
+      const fileTitle = data.title.replace(/\s+/g, "-").toLowerCase()
+      const parsedPDF = await parsePDFFile(data.pdfFile)
+
+      if (parsedPDF.content.length === 0) {
+        toast.error("Failed parsing pdf, try different file!")
+        return
+      }
+
+      // 3. Upload the book PDF.
+      const uploadedPdfBlob = await upload(fileTitle, data.pdfFile, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+        contentType: "application/pdf"
+      })
+
+      // 4. Cover: the chosen image, otherwise the PDF's first page.
+      let coverUrl: string
+
+      if (data.coverImage) {
+        const uploadedCoverBlob = await upload(
+          `${fileTitle}-cover.png`,
+          data.coverImage,
+          {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+            contentType: data.coverImage.type
+          }
+        )
+        coverUrl = uploadedCoverBlob.url
+      } else {
+        const response = await fetch(parsedPDF.cover)
+        const coverBlob = await response.blob()
+        const uploadedCoverBlob = await upload(
+          `${fileTitle}-cover.png`,
+          coverBlob,
+          {
+            access: "public",
+            handleUploadUrl: "/api/upload",
+            contentType: "image/png"
+          }
+        )
+        coverUrl = uploadedCoverBlob.url
+      }
+
+      // 5. Save the book record.
+      const book = await createBook({
+        clerkId: userId,
+        title: data.title,
+        author: data.author,
+        persona: data.persona,
+        fileURL: uploadedPdfBlob.url,
+        fileBlobKey: uploadedPdfBlob.pathname,
+        coverURL: coverUrl,
+        fileSize: data.pdfFile.size
+      })
+
+      if (!book.success || !book.data) throw new Error("Failed to create book")
+
+      // 6. Save the searchable segments.
+      const segments = await saveBookSegments(
+        String(book.data._id),
+        userId,
+        parsedPDF.content
+      )
+
+      if (!segments.success) throw new Error("Failed to save book segments")
+
+      toast.success("Book added successfully")
+      form.reset()
+      setResetToken((token) => token + 1)
+      router.push("/books")
+    } catch (error) {
+      console.error("Error while submitting", error)
+      toast.error("Error while submit")
+    }
   }
 
   const formItemVariants = prefersReducedMotion
@@ -350,7 +452,8 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
             )}
           />
         </motion.div>
-        <motion.div variants={formItemVariants}
+        <motion.div
+          variants={formItemVariants}
           className="flex w-full justify-end"
         >
           <Button

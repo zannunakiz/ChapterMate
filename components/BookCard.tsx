@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion"
-import type { Book } from "@/lib/constants"
+import { bookCoverUrl, type Book } from "@/lib/constants"
 
 type BookCardProps = {
   book: Book
@@ -27,7 +27,7 @@ export function BookCard({ book, index, onSelect }: BookCardProps) {
     >
       <div className="relative aspect-[2/3] overflow-hidden rounded-2xl border border-foreground/10 bg-muted shadow-sm transition-all duration-500 group-hover:border-foreground/30 group-hover:shadow-[0_20px_45px_-28px_rgba(255,255,255,0.6)]">
         <img
-          src={`https://picsum.photos/id/${book.coverId}/400/600`}
+          src={bookCoverUrl(book, 400, 600)}
           alt={`Cover of ${book.title}`}
           loading="lazy"
           className="h-full w-full object-cover grayscale-[15%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0"

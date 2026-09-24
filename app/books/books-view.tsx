@@ -1,17 +1,20 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { SignInButton, useAuth } from "@clerk/nextjs"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { BookCard } from "@/components/BookCard"
 import { BookDetailsDialog } from "@/components/BookDetailsDialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { Navigation } from "@/components/landing/navigation"
-import { sampleBooks, myBooks, type Book } from "@/lib/constants"
+import { sampleBooks, type Book } from "@/lib/constants"
 
 type BooksViewProps = {
-  /** FF_DUMMY_BOOKS, read on the server and passed down as a prop. */
-  dummyBooks: boolean
+  /** "My Books" tab data — the bundled samples or the signed-in user's books. */
+  myBooks: Book[]
+  /** True when "My Books" reads from the database and so needs a signed-in user. */
+  myBooksRequireAuth: boolean
 }
 
 const LOADING_DELAY_MS = 2000
@@ -29,7 +32,11 @@ function BookCardSkeleton() {
   )
 }
 
-function BooksSkeleton({ count }: { count: number }) {
+// Placeholder cards: 5 from `sm` up; a 6th is added below `sm` so the
+// two-column mobile grid stays full.
+const SKELETON_COUNT = 5
+
+function BooksSkeleton() {
   return (
     <div role="status" aria-busy="true">
       <span className="sr-only">Loading books…</span>
@@ -37,23 +44,24 @@ function BooksSkeleton({ count }: { count: number }) {
         data-books-skeleton
         className="grid grid-cols-2 gap-x-4 gap-y-12 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-5"
       >
-        {Array.from({ length: count }).map((_, index) => (
+        {Array.from({ length: SKELETON_COUNT }).map((_, index) => (
           <BookCardSkeleton key={index} />
         ))}
+        <div className="sm:hidden">
+          <BookCardSkeleton />
+        </div>
       </div>
     </div>
   )
 }
 
-export function BooksView({ dummyBooks }: BooksViewProps) {
+export function BooksView({ myBooks, myBooksRequireAuth }: BooksViewProps) {
+  const { isLoaded, isSignedIn } = useAuth()
   const [activeTab, setActiveTab] = useState<"sample" | "mine">("sample")
   const [isLoading, setIsLoading] = useState(true)
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
   const prefersReducedMotion = useReducedMotion()
   const books: Book[] = activeTab === "sample" ? sampleBooks : myBooks
-
-  // Keep the skeleton grid the same size as the real grid so nothing jumps.
-  const skeletonCount = books.length > 0 ? books.length : 10
 
   // Dummy fetch: show the book-card skeletons for 2s on every tab switch.
   useEffect(() => {
@@ -65,29 +73,6 @@ export function BooksView({ dummyBooks }: BooksViewProps) {
   const itemVariants = prefersReducedMotion
     ? undefined
     : { hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0 } }
-
-  // FF_DUMMY_BOOKS is false: the real database source is not wired up yet.
-  if (!dummyBooks) {
-    return (
-      <motion.main
-        initial="hidden"
-        animate="visible"
-        variants={itemVariants}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="min-h-screen bg-background pb-24 text-foreground"
-      >
-        <Navigation />
-        <div className="mx-auto max-w-[1200px] px-5 pt-32 md:px-8 lg:pt-40">
-          <p
-            data-books-feature-off
-            className="text-base leading-relaxed text-muted-foreground"
-          >
-            dummy feature is set to false
-          </p>
-        </div>
-      </motion.main>
-    )
-  }
 
   return (
     <motion.main
@@ -141,7 +126,32 @@ export function BooksView({ dummyBooks }: BooksViewProps) {
 
         <div data-books-item className="mt-10">
           {isLoading ? (
-            <BooksSkeleton count={skeletonCount} />
+            <BooksSkeleton />
+          ) : activeTab === "mine" &&
+            myBooksRequireAuth &&
+            isLoaded &&
+            !isSignedIn ? (
+            <div className="relative overflow-hidden rounded-3xl border border-foreground/10 bg-foreground/[0.025] px-6 py-16 text-center sm:px-10 sm:py-24">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-0 h-48 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-900/15 blur-3xl"
+              />
+              <div className="relative mx-auto max-w-md">
+                <p className="mb-4 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  Your library
+                </p>
+                <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
+                  Sign in to open your reading room.
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-muted-foreground sm:text-base">
+                  Log in to access your own books and upload new ones to talk
+                  about.
+                </p>
+                <SignInButton mode="modal">
+                  <Button className="mt-8 rounded-full px-6">Log in</Button>
+                </SignInButton>
+              </div>
+            </div>
           ) : books.length === 0 && activeTab === "mine" ? (
             <div className="relative overflow-hidden rounded-3xl border border-foreground/10 bg-foreground/[0.025] px-6 py-16 text-center sm:px-10 sm:py-24">
               <div

@@ -2,8 +2,26 @@ export type Book = {
   title: string
   author: string
   slug: string
-  coverId: number
+  /** Real cover stored in the database (MongoDB books). */
+  coverURL?: string
+  /** Bundled picsum id, used by the sample/dummy books. */
+  coverId?: number
   releaseYear: number
+}
+
+/**
+ * Cover image for a book: the database `coverURL` when present, otherwise the
+ * bundled picsum id (sample books have no stored cover).
+ */
+export function bookCoverUrl(
+  book: Pick<Book, "coverURL" | "coverId">,
+  width: number,
+  height: number,
+): string {
+  return (
+    book.coverURL ??
+    `https://picsum.photos/id/${book.coverId ?? 1}/${width}/${height}`
+  )
 }
 
 export const sampleBooks: Book[] = [

@@ -6,9 +6,9 @@ import {
   DialogClose,
   DialogContent,
   DialogFooter,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog"
-import type { Book } from "@/lib/constants"
+import { bookCoverUrl, type Book } from "@/lib/constants"
 import { motion, useReducedMotion } from "framer-motion"
 import { ArrowUpRight } from "lucide-react"
 
@@ -21,7 +21,7 @@ type BookDetailsDialogProps = {
 export function BookDetailsDialog({
   book,
   open,
-  onOpenChange,
+  onOpenChange
 }: BookDetailsDialogProps) {
   const prefersReducedMotion = useReducedMotion()
 
@@ -34,7 +34,7 @@ export function BookDetailsDialog({
             animate="visible"
             variants={{
               hidden: {},
-              visible: { transition: { staggerChildren: 0.08 } },
+              visible: { transition: { staggerChildren: 0.08 } }
             }}
             className="grid max-h-[calc(100vh-1.5rem)] overflow-y-auto sm:h-full sm:grid-cols-[42%_58%] sm:overflow-hidden"
           >
@@ -43,15 +43,15 @@ export function BookDetailsDialog({
                 prefersReducedMotion
                   ? undefined
                   : {
-                    hidden: { opacity: 0, scale: 0.98 },
-                    visible: { opacity: 1, scale: 1 },
-                  }
+                      hidden: { opacity: 0, scale: 0.98 },
+                      visible: { opacity: 1, scale: 1 }
+                    }
               }
               data-dialog-item
               className="relative h-44 overflow-hidden bg-muted sm:h-full"
             >
               <img
-                src={`https://picsum.photos/id/${book.coverId}/500/750`}
+                src={bookCoverUrl(book, 500, 750)}
                 alt={`Cover of ${book.title}`}
                 className="h-full w-full object-cover grayscale-[10%]"
               />
@@ -67,9 +67,9 @@ export function BookDetailsDialog({
                 prefersReducedMotion
                   ? undefined
                   : {
-                    hidden: { opacity: 0, y: 14 },
-                    visible: { opacity: 1, y: 0 },
-                  }
+                      hidden: { opacity: 0, y: 14 },
+                      visible: { opacity: 1, y: 0 }
+                    }
               }
               className="flex min-w-0 flex-col overflow-y-auto px-5 py-6 sm:px-9 sm:py-10 lg:px-12 lg:py-12"
             >
@@ -78,9 +78,9 @@ export function BookDetailsDialog({
                   prefersReducedMotion
                     ? undefined
                     : {
-                      hidden: { opacity: 0, y: 10 },
-                      visible: { opacity: 1, y: 0 },
-                    }
+                        hidden: { opacity: 0, y: 10 },
+                        visible: { opacity: 1, y: 0 }
+                      }
                 }
                 data-dialog-item
                 className="pr-8"
@@ -102,9 +102,9 @@ export function BookDetailsDialog({
                   prefersReducedMotion
                     ? undefined
                     : {
-                      hidden: { opacity: 0, y: 10 },
-                      visible: { opacity: 1, y: 0 },
-                    }
+                        hidden: { opacity: 0, y: 10 },
+                        visible: { opacity: 1, y: 0 }
+                      }
                 }
                 className="mt-auto"
               >

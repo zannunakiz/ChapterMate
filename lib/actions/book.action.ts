@@ -26,6 +26,25 @@ export const getAllBooks = async () => {
 }
 
 
+// Books belonging to a single signed-in user.
+export const getUserBooks = async (clerkId: string) => {
+   try {
+      await connectToDatabase()
+
+      const books = await Book.find({ clerkId }).sort({ createdAt: -1 }).lean()
+
+      return {
+         success: true,
+         data: serializeData(books)
+      }
+
+   } catch (error) {
+      console.error("error Get User Books", error)
+      return { success: false, error }
+   }
+}
+
+
 export const checkBookExist = async (title: string) => {
    try {
       await connectToDatabase()
