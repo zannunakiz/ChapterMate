@@ -1,7 +1,8 @@
 "use client"
 
-import { ArrowRight, Mic2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ArrowRight, Mic2 } from "lucide-react"
+import Link from "next/link"
 
 export function CtaSection() {
   return (
@@ -12,7 +13,7 @@ export function CtaSection() {
     >
       <div className="pointer-events-none absolute -right-20 top-10 h-72 w-72 rounded-full border border-background/10" />
       <div className="pointer-events-none absolute -right-8 top-24 h-56 w-56 rounded-full border border-background/10" />
-      <div className="relative mx-auto max-w-[1400px] px-6 lg:px-12">
+      <div className="relative mx-auto max-w-350 px-6 lg:px-12">
         <div className="max-w-4xl">
           <div className="mb-8 flex items-center gap-3 font-mono text-sm text-background/60">
             <Mic2 className="h-4 w-4" />
@@ -28,11 +29,14 @@ export function CtaSection() {
             perspectives, and make every story stay with you longer.
           </p>
           <Button
+            asChild
             className="group mt-12 rounded-none bg-background px-7 py-6 text-foreground hover:bg-background/85"
             size="lg"
           >
-            Start reading{" "}
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <Link href="/books">
+              Start reading{" "}
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </Button>
         </div>
       </div>

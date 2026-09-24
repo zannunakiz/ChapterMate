@@ -48,7 +48,7 @@ function toCardBook(book: MongoBook): Book {
 //                       Signed-out visitors simply get an empty list.
 export default async function BooksPage() {
   if (isDummyBooksEnabled()) {
-    return <BooksView myBooks={sampleMyBooks} />
+    return <BooksView myBooks={sampleMyBooks} myBooksRequireAuth={false} />
   }
 
   const { userId } = await auth()
@@ -56,5 +56,5 @@ export default async function BooksPage() {
   const raw: unknown = result && "data" in result ? result.data : []
   const rows = Array.isArray(raw) ? (raw as MongoBook[]) : []
 
-  return <BooksView myBooks={rows.map(toCardBook)} />
+  return <BooksView myBooks={rows.map(toCardBook)} myBooksRequireAuth />
 }

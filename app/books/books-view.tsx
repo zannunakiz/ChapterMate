@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { SignInButton, useAuth } from "@clerk/nextjs"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { BookCard } from "@/components/BookCard"
 import { BookDetailsDialog } from "@/components/BookDetailsDialog"
@@ -12,6 +13,8 @@ import { sampleBooks, type Book } from "@/lib/constants"
 type BooksViewProps = {
   /** "My Books" tab data — the bundled samples or the signed-in user's books. */
   myBooks: Book[]
+  /** True when "My Books" reads from the database and so needs a signed-in user. */
+  myBooksRequireAuth: boolean
 }
 
 const LOADING_DELAY_MS = 2000
@@ -52,7 +55,8 @@ function BooksSkeleton() {
   )
 }
 
-export function BooksView({ myBooks }: BooksViewProps) {
+export function BooksView({ myBooks, myBooksRequireAuth }: BooksViewProps) {
+  const { isLoaded, isSignedIn } = useAuth()
   const [activeTab, setActiveTab] = useState<"sample" | "mine">("sample")
   const [isLoading, setIsLoading] = useState(true)
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
@@ -123,6 +127,31 @@ export function BooksView({ myBooks }: BooksViewProps) {
         <div data-books-item className="mt-10">
           {isLoading ? (
             <BooksSkeleton />
+          ) : activeTab === "mine" &&
+            myBooksRequireAuth &&
+            isLoaded &&
+            !isSignedIn ? (
+            <div className="relative overflow-hidden rounded-3xl border border-foreground/10 bg-foreground/[0.025] px-6 py-16 text-center sm:px-10 sm:py-24">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-1/2 top-0 h-48 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-900/15 blur-3xl"
+              />
+              <div className="relative mx-auto max-w-md">
+                <p className="mb-4 text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
+                  Your library
+                </p>
+                <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
+                  Sign in to open your reading room.
+                </h2>
+                <p className="mt-4 text-sm leading-7 text-muted-foreground sm:text-base">
+                  Log in to access your own books and upload new ones to talk
+                  about.
+                </p>
+                <SignInButton mode="modal">
+                  <Button className="mt-8 rounded-full px-6">Log in</Button>
+                </SignInButton>
+              </div>
+            </div>
           ) : books.length === 0 && activeTab === "mine" ? (
             <div className="relative overflow-hidden rounded-3xl border border-foreground/10 bg-foreground/[0.025] px-6 py-16 text-center sm:px-10 sm:py-24">
               <div
