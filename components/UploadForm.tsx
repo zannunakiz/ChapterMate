@@ -16,6 +16,7 @@ import {
   BOOK_AUTHOR_MAX_LENGTH,
   BOOK_TITLE_MAX_LENGTH,
 } from "@/lib/book-validation"
+import { type VoiceKey } from "@/lib/constants"
 import {
   ACCEPTED_IMAGE_TYPES,
   ACCEPTED_PDF_TYPES
@@ -25,7 +26,7 @@ import {
   createBook,
   saveBookSegments
 } from "@/lib/actions/book.action"
-import { parsePDFFile, type VoiceKey } from "@/lib/utils"
+import { parsePDFFile } from "@/lib/utils"
 import { useAuth } from "@clerk/nextjs"
 import { upload } from "@vercel/blob/client"
 import { zodResolver } from "@hookform/resolvers/zod"

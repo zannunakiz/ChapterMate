@@ -103,6 +103,15 @@ export const voiceCategories = {
   female: ["rachel", "sarah"],
 }
 
+/**
+ * Canonical voice identifier persisted in `Book.persona`.
+ *
+ * Every writer of a book (the upload form, `SAMPLE_BOOKS`) must use one of
+ * these keys. Readers may also pass a display name ("Dave") or a raw
+ * ElevenLabs voice id, which `getVoiceKey()` in lib/utils.ts resolves.
+ */
+export type VoiceKey = keyof typeof voiceOptions
+
 // Default voice
 export const DEFAULT_VOICE = "rachel"
 
@@ -139,11 +148,19 @@ export const VAPI_DASHBOARD_CONFIG = {
   fillerInjectionEnabled: false,
 }
 
-export const SAMPLE_BOOKS = [
+export const SAMPLE_BOOKS: ReadonlyArray<{
+  title: string
+  author: string
+  /** Canonical voice key, resolved by getVoice() → voiceOptions. */
+  persona: VoiceKey
+  clerkId: string
+  pdfPath: string
+  coverPath: string
+}> = [
   {
     title: "Jane Eyre",
     author: "Charlotte Brontë",
-    persona: "Rachel",
+    persona: "rachel",
     clerkId: "sample-books",
     pdfPath: "lib/samples/Jane_Eyre.pdf",
     coverPath: "lib/samples/Jane_Eyre.png",
@@ -151,7 +168,7 @@ export const SAMPLE_BOOKS = [
   {
     title: "The Great Gatsby",
     author: "F. Scott Fitzgerald",
-    persona: "Dave",
+    persona: "dave",
     clerkId: "sample-books",
     pdfPath: "lib/samples/The_Great_Gatsby.pdf",
     coverPath: "lib/samples/The_Great_Gatsby.png",
@@ -159,9 +176,9 @@ export const SAMPLE_BOOKS = [
   {
     title: "Dracula",
     author: "Bram Stoker",
-    persona: "Sarah",
+    persona: "sarah",
     clerkId: "sample-books",
     pdfPath: "lib/samples/Dracula.pdf",
     coverPath: "lib/samples/Dracula.png",
   }
-] as const
+]
