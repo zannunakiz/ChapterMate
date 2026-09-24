@@ -1,21 +1,24 @@
 import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { VapiControls } from "@/components/VapiControls"
-import { getBookBySlug } from "@/lib/actions/book.action"
+import { getBookForSession } from "@/lib/actions/book.action"
 import type { IBook } from "@/types"
 
-// Same flow as OldVersion's /books/[slug]: the visitor must be signed in and the
-// book is resolved from MongoDB by slug.
+// Session access rules (see lib/book-access.ts):
+//   signed out -> only the public sample books (clerkId "sample-books")
+//   signed in  -> the sample books plus the user's own books (clerkId === userId)
+// Anything else — another user's book or an unknown slug — redirects to /books.
 export default async function BookSessionPage({
   params
 }: {
   params: Promise<{ slug: string }>
 }) {
+  // No sign-in redirect here on purpose: signed-out visitors may still open the
+  // sample books, so `/books/session/*` is public in proxy.ts.
   const { userId } = await auth()
-  if (!userId) redirect("/")
 
   const { slug } = await params
-  const result = await getBookBySlug(slug)
+  const result = await getBookForSession(slug, userId)
 
   if (!result.success || !result.data) redirect("/books")
 

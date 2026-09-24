@@ -4,6 +4,7 @@ import BookSegment from "@/database/models/book-segment.model";
 import { Book } from "@/database/models/book.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { CreateBook, TextSegment } from "@/types";
+import { bookAccessFilter } from "@/lib/book-access";
 import mongoose from "mongoose";
 import { escapeRegex, generateSlug, serializeData, splitIntoSegments } from "../utils";
 
@@ -112,6 +113,31 @@ export const getBookBySlug = async (slug: string) => {
       }
    } catch (error) {
       console.error("Error at getBookBySlug book.action.ts", error)
+      return { success: false, data: null }
+   }
+}
+
+// Session-page lookup: resolves a book the viewer is allowed to talk to.
+//
+// The access rule is applied inside the query (see bookAccessFilter), so books
+// the viewer must not see are never read out of the database. Signed-out
+// visitors only match the public sample books; signed-in users also match their
+// own books. Anything else (missing book or no permission) resolves to
+// `{ success: false, data: null }` and the page redirects to /books.
+export const getBookForSession = async (slug: string, userId?: string | null) => {
+   try {
+      await connectToDatabase()
+
+      const book = await Book.findOne({ slug, ...bookAccessFilter(userId) }).lean()
+
+      if (!book) return { success: false, data: null }
+
+      return {
+         success: true,
+         data: serializeData(book)
+      }
+   } catch (error) {
+      console.error("Error at getBookForSession book.action.ts", error)
       return { success: false, data: null }
    }
 }

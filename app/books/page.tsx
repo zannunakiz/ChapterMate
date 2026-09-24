@@ -3,6 +3,7 @@ import { getUserBooks } from "@/lib/actions/book.action"
 import {
   myBooks as bundledMyBooks,
   sampleBooks as bundledSampleBooks,
+  SAMPLE_BOOKS_CLERK_ID,
   type Book,
 } from "@/lib/constants"
 import { isDummyBooksEnabled } from "@/lib/feature-flags"
@@ -60,7 +61,7 @@ export default async function BooksPage() {
 
   const { userId } = await auth()
   const [sampleResult, userResult] = await Promise.all([
-    getUserBooks("sample-books"),
+    getUserBooks(SAMPLE_BOOKS_CLERK_ID),
     userId ? getUserBooks(userId) : Promise.resolve(null),
   ])
   const sampleRaw: unknown =

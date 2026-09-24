@@ -1,5 +1,5 @@
-import { ClerkProvider } from '@clerk/nextjs'
 import { Toaster } from '@/components/ui/sonner'
+import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import {
@@ -29,7 +29,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'ChapterMate',
   description:
-    'Chat with AI voice agents about your favorite books. Upload your own PDFs or explore curated classics. Powered by VAPI.',
+    'Chat with AI voice agents about your favorite books. Upload your own PDFs or explore curated classics.',
 }
 
 export default function RootLayout({

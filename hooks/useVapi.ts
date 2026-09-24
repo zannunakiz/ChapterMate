@@ -2,7 +2,6 @@
 
 // Create hooks/useVapi.ts: the core hook. Initializes Vapi SDK, manages call lifecycle (idle, connecting, starting, listening, thinking, speaking), tracks messages array + currentMessage streaming, handles duration timer with maxDuration enforcement, session tracking via server actions
 
-import { useAuth } from '@clerk/nextjs';
 import Vapi from '@vapi-ai/web';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -38,7 +37,6 @@ function getVapi() {
 export type CallStatus = 'idle' | 'connecting' | 'starting' | 'listening' | 'thinking' | 'speaking';
 
 export function useVapi(book: IBook) {
-   const { userId } = useAuth();
    // const { limits } = useSubscription();
 
    const [status, setStatus] = useState<CallStatus>('idle');
@@ -238,17 +236,14 @@ export function useVapi(book: IBook) {
    }, [durationRef]);
 
    const start = useCallback(async () => {
-      if (!userId) {
-         setLimitError('Please sign in to start a voice session.');
-         return;
-      }
-
       setLimitError(null);
       setStatus('connecting');
 
       try {
-         // Check session limits and create session record
-         const result = await startVoiceSession(userId, book._id);
+         // Creates the session record and re-checks book access on the server.
+         // Guests are allowed: their session is recorded under the public
+         // sample-books id, so only sample books are playable while signed out.
+         const result = await startVoiceSession(book._id);
 
          if (!result.success) {
             setLimitError(result.error || 'Session limit reached. Please upgrade your plan.');
@@ -284,7 +279,7 @@ export function useVapi(book: IBook) {
          setStatus('idle');
          setLimitError('Failed to start voice session. Please try again.');
       }
-   }, [book._id, book.title, book.author, voice.id, userId]);
+   }, [book._id, book.title, book.author, voice.id]);
 
    const stop = useCallback(() => {
       isStoppingRef.current = true;

@@ -148,6 +148,14 @@ export const VAPI_DASHBOARD_CONFIG = {
   fillerInjectionEnabled: false,
 }
 
+/**
+ * `clerkId` stored on the seeded sample books (see database/seed-samples.mjs).
+ *
+ * Books with this id belong to nobody, so they are readable by everyone —
+ * including signed-out visitors. Every other book is private to its owner.
+ */
+export const SAMPLE_BOOKS_CLERK_ID = "sample-books"
+
 export const SAMPLE_BOOKS: ReadonlyArray<{
   title: string
   author: string
@@ -161,7 +169,7 @@ export const SAMPLE_BOOKS: ReadonlyArray<{
     title: "Jane Eyre",
     author: "Charlotte Brontë",
     persona: "rachel",
-    clerkId: "sample-books",
+    clerkId: SAMPLE_BOOKS_CLERK_ID,
     pdfPath: "lib/samples/Jane_Eyre.pdf",
     coverPath: "lib/samples/Jane_Eyre.png",
   },
@@ -169,7 +177,7 @@ export const SAMPLE_BOOKS: ReadonlyArray<{
     title: "The Great Gatsby",
     author: "F. Scott Fitzgerald",
     persona: "dave",
-    clerkId: "sample-books",
+    clerkId: SAMPLE_BOOKS_CLERK_ID,
     pdfPath: "lib/samples/The_Great_Gatsby.pdf",
     coverPath: "lib/samples/The_Great_Gatsby.png",
   },
@@ -177,7 +185,7 @@ export const SAMPLE_BOOKS: ReadonlyArray<{
     title: "Dracula",
     author: "Bram Stoker",
     persona: "sarah",
-    clerkId: "sample-books",
+    clerkId: SAMPLE_BOOKS_CLERK_ID,
     pdfPath: "lib/samples/Dracula.pdf",
     coverPath: "lib/samples/Dracula.png",
   }

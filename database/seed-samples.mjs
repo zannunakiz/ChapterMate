@@ -11,7 +11,7 @@ const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)))
 
 loadEnvConfig(projectRoot)
 
-const { SAMPLE_BOOKS, voiceOptions } = await import("../lib/constants.ts")
+const { SAMPLE_BOOKS, SAMPLE_BOOKS_CLERK_ID, voiceOptions } = await import("../lib/constants.ts")
 
 function generateSlug(text) {
   return text
@@ -91,7 +91,7 @@ try {
 
   const books = mongoose.connection.collection("books")
   const bookSegments = mongoose.connection.collection("booksegments")
-  const sampleClerkId = "sample-books"
+  const sampleClerkId = SAMPLE_BOOKS_CLERK_ID
   const existingBooks = await books
     .find({ clerkId: sampleClerkId }, { projection: { _id: 1 } })
     .toArray()
