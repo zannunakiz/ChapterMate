@@ -1,7 +1,7 @@
 import type { TextSegment } from '@/types'
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { DEFAULT_VOICE, voiceOptions } from './constants'
+import { DEFAULT_VOICE, voiceOptions, type VoiceKey } from './constants'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -60,8 +60,6 @@ export const splitIntoSegments = (
 
   return segments
 }
-
-export type VoiceKey = keyof typeof voiceOptions
 
 const voiceKeys = new Set<string>(Object.keys(voiceOptions))
 

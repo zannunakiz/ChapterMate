@@ -11,7 +11,7 @@ const projectRoot = resolve(fileURLToPath(new URL("..", import.meta.url)))
 
 loadEnvConfig(projectRoot)
 
-const { SAMPLE_BOOKS } = await import("../lib/constants.ts")
+const { SAMPLE_BOOKS, voiceOptions } = await import("../lib/constants.ts")
 
 function generateSlug(text) {
   return text
@@ -106,6 +106,11 @@ try {
   for (const sample of SAMPLE_BOOKS) {
     if (sample.clerkId !== sampleClerkId) {
       throw new Error(`Unexpected sample clerkId for ${sample.title}`)
+    }
+    if (!voiceOptions[sample.persona]) {
+      throw new Error(
+        `Unknown persona "${sample.persona}" for ${sample.title}; expected one of ${Object.keys(voiceOptions).join(", ")}`,
+      )
     }
 
     const [pdfBuffer, coverBuffer] = await Promise.all([
