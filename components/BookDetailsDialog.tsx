@@ -8,6 +8,7 @@ import {
   DialogTitle
 } from "@/components/ui/dialog"
 import { bookCoverUrl, type Book } from "@/lib/constants"
+import { deleteBook } from "@/lib/actions/book.action"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { ArrowUpRight, Loader2, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
@@ -17,12 +18,14 @@ type BookDetailsDialogProps = {
   book: Book | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  canDelete: boolean
 }
 
 export function BookDetailsDialog({
   book,
   open,
-  onOpenChange
+  onOpenChange,
+  canDelete
 }: BookDetailsDialogProps) {
   const prefersReducedMotion = useReducedMotion()
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
@@ -40,23 +43,19 @@ export function BookDetailsDialog({
   }, [open])
 
   const handleDelete = async () => {
+    if (!book || !canDelete) return
+
     setIsDeleting(true)
     try {
-      // Simulate 3 seconds dummy deletion
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          // 80% success rate to demonstrate both success & fail capabilities
-          if (Math.random() > 0.2) resolve(true)
-          else reject(new Error("Simulated failure"))
-        }, 3000)
-      })
+      const result = await deleteBook(book.slug)
 
-      toast.success("Delete success")
+      if (!result.success) throw new Error(result.error)
 
-      // Delay 1 second while still disabled before page reload
+      toast.success("Book deleted")
+
       setTimeout(() => {
         window.location.reload()
-      }, 1000)
+      }, 500)
     } catch (error) {
       toast.error("Delete failed")
       // Revert to original state upon failure
@@ -172,14 +171,16 @@ export function BookDetailsDialog({
                             <ArrowUpRight className="ml-0 size-3" />
                           </a>
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="mx-auto h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:mx-0"
-                          onClick={() => setIsConfirmingDelete(true)}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="mx-auto h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:mx-0"
+                            onClick={() => setIsConfirmingDelete(true)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        )}
                       </motion.div>
                     ) : (
                       <motion.div
