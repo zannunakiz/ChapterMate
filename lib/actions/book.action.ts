@@ -1,5 +1,7 @@
 "use server";
 
+import { auth } from "@clerk/nextjs/server";
+import { del } from "@vercel/blob";
 import BookSegment from "@/database/models/book-segment.model";
 import { Book } from "@/database/models/book.model";
 import { connectToDatabase } from "@/database/mongoose";
@@ -42,6 +44,50 @@ export const getUserBooks = async (clerkId: string) => {
    } catch (error) {
       console.error("error Get User Books", error)
       return { success: false, error }
+   }
+}
+
+/**
+ * Deletes a book owned by the signed-in Clerk user, along with its searchable
+ * segments and uploaded file assets. The owner is always resolved server-side;
+ * the client never supplies a Clerk ID.
+ */
+export const deleteBook = async (slug: string) => {
+   try {
+      const { userId } = await auth();
+
+      if (!userId) return { success: false, error: "You need to log in." };
+      if (!slug || slug.length > 200) return { success: false, error: "Book not found." };
+
+      await connectToDatabase();
+
+      // Atomically restrict the delete to the authenticated user's book. This
+      // also prevents deletion of public sample books and other users' books.
+      const book = await Book.findOneAndDelete({ slug, clerkId: userId }).lean();
+
+      if (!book) return { success: false, error: "Book not found." };
+
+      await BookSegment.deleteMany({ bookId: book._id, clerkId: userId });
+
+      const blobUrls = [book.fileURL, book.coverURL].filter(
+         (url): url is string => Boolean(url),
+      );
+
+      if (blobUrls.length > 0) {
+         try {
+            await del(blobUrls);
+         } catch (error) {
+            // The book itself is already deleted. Do not expose provider errors
+            // to the browser or turn a successful ownership-scoped deletion
+            // into a false failure because blob cleanup needs attention.
+            console.error("Error deleting book blobs", error);
+         }
+      }
+
+      return { success: true };
+   } catch (error) {
+      console.error("Error deleting book", error);
+      return { success: false, error: "Unable to delete this book. Please try again." };
    }
 }
 

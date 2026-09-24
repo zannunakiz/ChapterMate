@@ -61,7 +61,7 @@ export function BooksView({
   myBooks,
   myBooksRequireAuth,
 }: BooksViewProps) {
-  const { isLoaded, isSignedIn } = useAuth()
+  const { isLoaded, isSignedIn, userId } = useAuth()
   const [activeTab, setActiveTab] = useState<"sample" | "mine">("sample")
   const [isLoading, setIsLoading] = useState(true)
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
@@ -205,6 +205,12 @@ export function BooksView({
       <BookDetailsDialog
         book={selectedBook}
         open={selectedBook !== null}
+        canDelete={Boolean(
+          myBooksRequireAuth &&
+            activeTab === "mine" &&
+            isSignedIn &&
+            userId,
+        )}
         onOpenChange={(open) => {
           if (!open) setSelectedBook(null)
         }}

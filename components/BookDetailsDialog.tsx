@@ -3,27 +3,66 @@
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogFooter,
   DialogTitle
 } from "@/components/ui/dialog"
 import { bookCoverUrl, type Book } from "@/lib/constants"
-import { motion, useReducedMotion } from "framer-motion"
-import { ArrowUpRight } from "lucide-react"
+import { deleteBook } from "@/lib/actions/book.action"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { ArrowUpRight, Loader2, Trash2 } from "lucide-react"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 type BookDetailsDialogProps = {
   book: Book | null
   open: boolean
   onOpenChange: (open: boolean) => void
+  canDelete: boolean
 }
 
 export function BookDetailsDialog({
   book,
   open,
-  onOpenChange
+  onOpenChange,
+  canDelete
 }: BookDetailsDialogProps) {
   const prefersReducedMotion = useReducedMotion()
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  // Reset state gracefully when dialog is closed
+  useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => {
+        setIsConfirmingDelete(false)
+        setIsDeleting(false)
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [open])
+
+  const handleDelete = async () => {
+    if (!book || !canDelete) return
+
+    setIsDeleting(true)
+    try {
+      const result = await deleteBook(book.slug)
+
+      if (!result.success) throw new Error(result.error)
+
+      toast.success("Book deleted")
+
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
+    } catch (error) {
+      toast.error("Delete failed")
+      // Revert to original state upon failure
+      setIsConfirmingDelete(false)
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -43,9 +82,9 @@ export function BookDetailsDialog({
                 prefersReducedMotion
                   ? undefined
                   : {
-                      hidden: { opacity: 0, scale: 0.98 },
-                      visible: { opacity: 1, scale: 1 }
-                    }
+                    hidden: { opacity: 0, scale: 0.98 },
+                    visible: { opacity: 1, scale: 1 }
+                  }
               }
               data-dialog-item
               className="relative h-44 overflow-hidden bg-muted sm:h-full"
@@ -67,9 +106,9 @@ export function BookDetailsDialog({
                 prefersReducedMotion
                   ? undefined
                   : {
-                      hidden: { opacity: 0, y: 14 },
-                      visible: { opacity: 1, y: 0 }
-                    }
+                    hidden: { opacity: 0, y: 14 },
+                    visible: { opacity: 1, y: 0 }
+                  }
               }
               className="flex min-w-0 flex-col overflow-y-auto px-5 py-6 sm:px-9 sm:py-10 lg:px-12 lg:py-12"
             >
@@ -78,9 +117,9 @@ export function BookDetailsDialog({
                   prefersReducedMotion
                     ? undefined
                     : {
-                        hidden: { opacity: 0, y: 10 },
-                        visible: { opacity: 1, y: 0 }
-                      }
+                      hidden: { opacity: 0, y: 10 },
+                      visible: { opacity: 1, y: 0 }
+                    }
                 }
                 data-dialog-item
                 className="min-w-0 overflow-hidden pr-8"
@@ -106,9 +145,9 @@ export function BookDetailsDialog({
                   prefersReducedMotion
                     ? undefined
                     : {
-                        hidden: { opacity: 0, y: 10 },
-                        visible: { opacity: 1, y: 0 }
-                      }
+                      hidden: { opacity: 0, y: 10 },
+                      visible: { opacity: 1, y: 0 }
+                    }
                 }
                 className="mt-auto"
               >
@@ -116,20 +155,68 @@ export function BookDetailsDialog({
                   data-dialog-item
                   className="flex-col items-stretch gap-2 border-t pt-5 sm:flex-row sm:items-center sm:justify-end"
                 >
-                  <Button asChild className="h-9 rounded-full px-4 text-xs">
-                    <a href={`/books/session/${book.slug}`}>
-                      Start conversation{" "}
-                      <ArrowUpRight className="ml-0 size-3" />
-                    </a>
-                  </Button>
-                  <DialogClose asChild>
-                    <Button
-                      variant="ghost"
-                      className="h-9 rounded-full px-4 text-xs"
-                    >
-                      Close
-                    </Button>
-                  </DialogClose>
+                  <AnimatePresence mode="wait">
+                    {!isConfirmingDelete ? (
+                      <motion.div
+                        key="default-actions"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex w-full flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center"
+                      >
+                        <Button asChild className="h-9 rounded-full px-4 text-xs">
+                          <a href={`/books/session/${book.slug}`}>
+                            Start conversation{" "}
+                            <ArrowUpRight className="ml-0 size-3" />
+                          </a>
+                        </Button>
+                        {canDelete && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="mx-auto h-9 w-9 shrink-0 rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive sm:mx-0"
+                            onClick={() => setIsConfirmingDelete(true)}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        )}
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="confirm-actions"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex w-full flex-row items-center justify-end gap-2 sm:w-auto"
+                      >
+                        <span className="mr-2 text-xs font-medium text-muted-foreground">
+                          Delete?
+                        </span>
+                        <Button
+                          variant="ghost"
+                          className="h-9 rounded-full px-4 text-xs"
+                          onClick={() => setIsConfirmingDelete(false)}
+                          disabled={isDeleting}
+                        >
+                          No
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="h-9 min-w-[64px] rounded-full px-4 text-xs"
+                          onClick={handleDelete}
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="size-3 animate-spin" />
+                          ) : (
+                            "Yes"
+                          )}
+                        </Button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </DialogFooter>
               </motion.div>
             </motion.div>
