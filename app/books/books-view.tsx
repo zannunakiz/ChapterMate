@@ -5,7 +5,7 @@ import { SignInButton, useAuth } from "@clerk/nextjs"
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
 import { BookCard } from "@/components/BookCard"
 import { BookDetailsDialog } from "@/components/BookDetailsDialog"
-import { Skeleton } from "@/components/ui/skeleton"
+import { BooksGridSkeleton } from "@/components/BooksGridSkeleton"
 import { Button } from "@/components/ui/button"
 import { Navigation } from "@/components/landing/navigation"
 import { type Book } from "@/lib/constants"
@@ -16,64 +16,55 @@ type BooksViewProps = {
   myBooks: Book[]
   /** True when "My Books" reads from the database and so needs a signed-in user. */
   myBooksRequireAuth: boolean
+  /**
+   * FF_DUMMY_BOOKS, read on the server and passed down as a prop. The bundled
+   * data is already in the props, so the skeletons are held on purpose to mimic
+   * a fetch. The database path skips that pause and paints as soon as the
+   * server has the rows.
+   */
+  dummyBooks: boolean
 }
 
-const LOADING_DELAY_MS = 2000
-
-// Mirrors the BookCard layout (cover, title, author) so the grid keeps its shape.
-function BookCardSkeleton() {
-  return (
-    <div className="block">
-      <Skeleton className="aspect-[2/3] w-full rounded-2xl border border-foreground/25 bg-foreground/20" />
-      <div className="pt-4">
-        <Skeleton className="h-5 w-4/5 rounded-md bg-foreground/20" />
-        <Skeleton className="mt-2 h-3.5 w-2/5 rounded-md bg-foreground/20" />
-      </div>
-    </div>
-  )
-}
-
-// Placeholder cards: 5 from `sm` up; a 6th is added below `sm` so the
-// two-column mobile grid stays full.
-const SKELETON_COUNT = 5
-
-function BooksSkeleton() {
-  return (
-    <div role="status" aria-busy="true">
-      <span className="sr-only">Loading books…</span>
-      <div
-        data-books-skeleton
-        className="grid grid-cols-2 gap-x-4 gap-y-12 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-5"
-      >
-        {Array.from({ length: SKELETON_COUNT }).map((_, index) => (
-          <BookCardSkeleton key={index} />
-        ))}
-        <div className="sm:hidden">
-          <BookCardSkeleton />
-        </div>
-      </div>
-    </div>
-  )
-}
+/** Only the bundled (dummy) data pauses on the skeletons. */
+const DUMMY_LOADING_DELAY_MS = 2000
 
 export function BooksView({
   sampleBooks,
   myBooks,
   myBooksRequireAuth,
+  dummyBooks,
 }: BooksViewProps) {
   const { isLoaded, isSignedIn, userId } = useAuth()
   const [activeTab, setActiveTab] = useState<"sample" | "mine">("sample")
-  const [isLoading, setIsLoading] = useState(true)
+  // Dummy mode starts on the skeletons; the database path starts on the real
+  // rows the server already fetched.
+  const [isLoading, setIsLoading] = useState(dummyBooks)
   const [selectedBook, setSelectedBook] = useState<Book | null>(null)
   const prefersReducedMotion = useReducedMotion()
   const books: Book[] = activeTab === "sample" ? sampleBooks : myBooks
 
-  // Dummy fetch: show the book-card skeletons for 2s on every tab switch.
+  // Dummy fetch: hold the book-card skeletons for 2s on every tab switch, but
+  // only for the bundled data. A database fetch has already resolved on the
+  // server, so pausing here would just make the app feel slow.
   useEffect(() => {
+    if (!dummyBooks) {
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
-    const timer = window.setTimeout(() => setIsLoading(false), LOADING_DELAY_MS)
+    const timer = window.setTimeout(
+      () => setIsLoading(false),
+      DUMMY_LOADING_DELAY_MS,
+    )
     return () => window.clearTimeout(timer)
-  }, [activeTab])
+  }, [activeTab, dummyBooks])
+
+  // "My Books" needs Clerk's client state to tell a signed-out visitor from an
+  // empty library, so the database path waits for it instead of briefly showing
+  // the wrong panel. That wait is not artificial and never applies to the
+  // bundled data.
+  const awaitingAuth = myBooksRequireAuth && activeTab === "mine" && !isLoaded
 
   const itemVariants = prefersReducedMotion
     ? undefined
@@ -130,8 +121,8 @@ export function BooksView({
         </div>
 
         <div data-books-item className="mt-10">
-          {isLoading ? (
-            <BooksSkeleton />
+          {isLoading || awaitingAuth ? (
+            <BooksGridSkeleton />
           ) : activeTab === "mine" &&
             myBooksRequireAuth &&
             isLoaded &&
