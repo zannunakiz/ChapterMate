@@ -173,7 +173,6 @@ export async function parsePDFFile(file: File) {
       cover: coverDataURL,
     }
   } catch (error) {
-    console.error('Error parsing PDF:', error)
     throw new Error(
       `Failed to parse PDF file: ${error instanceof Error ? error.message : String(error)}`,
     )

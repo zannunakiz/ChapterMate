@@ -73,29 +73,15 @@ export async function ensureDnsResolvers(): Promise<boolean> {
 
   const servers = getFallbackServers()
 
-  console.warn(
-    `[dns] System resolver appears broken (failed resolving "${PROBE_HOST}"). ` +
-      `Pointing Node DNS at: ${servers.join(', ')}`,
-  )
-
   try {
     dns.setServers(servers)
-  } catch (error) {
-    console.warn('[dns] Failed to reconfigure DNS servers:', error)
+  } catch {
     return false
   }
 
   configured = true
 
   const fixed = await resolverWorks()
-
-  if (fixed) {
-    console.info(
-      `[dns] Node DNS now resolving via ${dns.getServers().join(', ')}`,
-    )
-  } else {
-    console.warn('[dns] Still failing after switching DNS servers')
-  }
 
   return fixed
 }

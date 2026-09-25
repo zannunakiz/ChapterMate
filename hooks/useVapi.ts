@@ -104,9 +104,7 @@ export function useVapi(book: IBook) {
 
             // End session tracking
             if (sessionIdRef.current) {
-               endVoiceSession(sessionIdRef.current, durationRef.current).catch((err) =>
-                  console.error('Failed to end voice session:', err),
-               );
+               endVoiceSession(sessionIdRef.current, durationRef.current).catch(() => undefined);
                sessionIdRef.current = null;
             }
 
@@ -168,8 +166,7 @@ export function useVapi(book: IBook) {
          },
 
          error: (error: Error) => {
-            // Vapi reports the real reason inside a nested `error` payload, so
-            // that is what gets logged instead of an empty object.
+            // Vapi reports the real reason inside a nested `error` payload.
             const detail = error as unknown as {
                error?: { message?: string };
                message?: string;
@@ -179,7 +176,6 @@ export function useVapi(book: IBook) {
                detail?.message ||
                JSON.stringify(error, Object.getOwnPropertyNames(error ?? {}));
 
-            console.error('Vapi error:', reason);
             // Don't reset isStoppingRef here - delayed events may still fire
             setStatus('idle');
             setCurrentMessage('');
@@ -193,9 +189,7 @@ export function useVapi(book: IBook) {
 
             // End session tracking on error
             if (sessionIdRef.current) {
-               endVoiceSession(sessionIdRef.current, durationRef.current).catch((err) =>
-                  console.error('Failed to end voice session on error:', err),
-               );
+               endVoiceSession(sessionIdRef.current, durationRef.current).catch(() => undefined);
                sessionIdRef.current = null;
             }
 
@@ -222,9 +216,7 @@ export function useVapi(book: IBook) {
           // End active session on unmount
           if (sessionIdRef.current) {
             getVapi().stop();
-            endVoiceSession(sessionIdRef.current, durationSnapshotRef.current).catch((err) =>
-               console.error('Failed to end voice session on unmount:', err),
-            );
+            endVoiceSession(sessionIdRef.current, durationSnapshotRef.current).catch(() => undefined);
             sessionIdRef.current = null;
          }
          // Cleanup handlers
@@ -274,8 +266,7 @@ export function useVapi(book: IBook) {
                useSpeakerBoost: VOICE_SETTINGS.useSpeakerBoost,
             },
          });
-      } catch (err) {
-         console.error('Failed to start call:', err);
+      } catch {
          setStatus('idle');
          setLimitError('Failed to start voice session. Please try again.');
       }

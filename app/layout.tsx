@@ -43,7 +43,14 @@ export default function RootLayout({
       <body
         className={`${instrumentSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <ClerkProvider dynamic>{children}</ClerkProvider>
+        <ClerkProvider
+          dynamic
+          afterSignOutUrl="/"
+          signInForceRedirectUrl="/"
+          signUpForceRedirectUrl="/"
+        >
+          {children}
+        </ClerkProvider>
         {/* Suspense is required because PostHogPageView reads useSearchParams. */}
         <React.Suspense fallback={null}>
           <PostHogPageView />

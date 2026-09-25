@@ -162,10 +162,8 @@ try {
       })),
     )
 
-    console.log(`Seeded ${sample.title}: ${segments.length} segments`)
   }
 
-  console.log(`Seeded ${SAMPLE_BOOKS.length} sample books for ${sampleClerkId}`)
 } finally {
   await mongoose.disconnect()
 }

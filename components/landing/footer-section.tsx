@@ -11,7 +11,7 @@ type FooterLink = {
 }
 
 const footerLinks: Record<string, FooterLink[]> = {
-  ChapterMate: [
+  Summary: [
     { name: "Features", href: "#features" },
     { name: "How it works", href: "#how-it-works" },
     { name: "Book library", href: "#library" },
@@ -217,7 +217,7 @@ export function FooterSection() {
           <div className="flex items-center gap-4 text-sm text-white/30">
             <span className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#eca8d6]" />
-              Powered by VAPI voice AI
+              R.A 4SRG
             </span>
           </div>
         </div>

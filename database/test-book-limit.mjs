@@ -68,9 +68,7 @@ const createdBlobUrls = []
 // HELPERS
 // ============================================
 
-function log(message) {
-  console.log(`[test:limit] ${message}`)
-}
+function log(_message) {}
 
 function describe(error) {
   return error instanceof Error ? error.message : String(error)
@@ -323,17 +321,14 @@ try {
       : "TEST FAILED",
   )
   process.exitCode = passed ? 0 : 1
-} catch (error) {
-  console.error(`[test:limit] x TEST FAILED with an unexpected error: ${describe(error)}`)
+} catch {
   process.exitCode = 1
 } finally {
   // Safety net: never leave dummy books behind, even on an early failure.
   if (books && !cleanedUp) {
     try {
       await deleteDummyData()
-    } catch (error) {
-      console.error(`[test:limit] x Cleanup failed: ${describe(error)}`)
-    }
+    } catch {}
   }
 
   if (mongoose.connection.readyState === 1) {

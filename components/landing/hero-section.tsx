@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useRef, useState } from "react";
 
 const words = ["explore", "discuss", "discover", "learn"]
 
@@ -175,11 +175,10 @@ export function HeroSection() {
         <div className="lg:max-w-[55%]">
           {/* Eyebrow */}
           <div
-            className={`mb-8 transition-all duration-700 ${
-              isVisible
+            className={`mb-8 transition-all duration-700 ${isVisible
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-4"
-            }`}
+              }`}
           >
             <span className="inline-flex items-center gap-3 text-sm font-mono text-white/60">
               <span className="w-8 h-px bg-white/30" />
@@ -190,11 +189,10 @@ export function HeroSection() {
           {/* Main headline */}
           <div className="mb-12">
             <h1
-              className={`text-left text-[clamp(2rem,5vw,7rem)] font-display leading-[0.94] tracking-tight text-white transition-all duration-1000 ${
-                isVisible
+              className={`text-left text-[clamp(2rem,5vw,7rem)] font-display leading-[0.94] tracking-tight text-white transition-all duration-1000 ${isVisible
                   ? "opacity-100 translate-y-0"
                   : "opacity-0 translate-y-8"
-              }`}
+                }`}
             >
               <span className="block">Talk about books,</span>
               <span className="block">
@@ -210,13 +208,11 @@ export function HeroSection() {
 
       {/* Stats — 3 metrics static, no auto-scroll */}
       <div
-        className={`absolute bottom-12 left-0 right-0 px-6 lg:px-12 transition-all duration-700 delay-500 ${
-          isVisible ? "opacity-100" : "opacity-0"
-        }`}
+        className={`absolute bottom-12 left-0 right-0 px-6 lg:px-12 transition-all duration-700 delay-500 ${isVisible ? "opacity-100" : "opacity-0"
+          }`}
       >
         <div className="max-w-[1400px] mx-auto flex items-start gap-10 lg:gap-20">
           {[
-            { value: "100+", label: "books in library" },
             { value: "24/7", label: "voice conversations" },
             { value: "AI-powered", label: "discussions" },
           ].map((stat) => (

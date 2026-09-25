@@ -29,10 +29,7 @@ try {
   await configureDnsFallback()
   await mongoose.connect(mongoUri)
 
-  const databaseName = mongoose.connection.name
   await mongoose.connection.dropDatabase()
-
-  console.log(`Cleared MongoDB database: ${databaseName}`)
 } finally {
   await mongoose.disconnect()
 }

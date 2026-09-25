@@ -84,23 +84,6 @@ try {
     .sort({ createdAt: -1 })
     .toArray()
 
-  if (books.length === 0) {
-    console.log("No books found in the database.")
-  }
-
-  for (const book of books) {
-    const voiceKey = resolveVoiceKey(book.persona)
-    const voice = voiceOptions[voiceKey]
-    const stored = book.persona === undefined ? "undefined" : JSON.stringify(book.persona)
-
-    console.log(
-      `${book.title} (/${book.slug})\n` +
-        `  persona     : ${stored} [${describePersona(book.persona)}]\n` +
-        `  session uses: ${voice.name} -> voiceId ${voice.id} (key "${voiceKey}")`,
-    )
-  }
-
-  console.log(`\n${books.length} book(s) checked against MongoDB "${mongoose.connection.name}".`)
 } finally {
   await mongoose.disconnect()
 }

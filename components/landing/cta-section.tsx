@@ -17,7 +17,15 @@ export function CtaSection() {
         <div className="max-w-4xl">
           <div className="mb-8 flex items-center gap-3 font-mono text-sm text-background/60">
             <Mic2 className="h-4 w-4" />
-            Powered by VAPI voice AI
+            Powered by{" "}
+            <a
+              href="https://dashboard.vapi.ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold underline hover:text-gray-400 transition-colors"
+            >
+              VAPI
+            </a>
           </div>
           <h2 className="font-display text-5xl leading-[0.92] tracking-tight transition-transform duration-700 md:text-7xl lg:text-[119px]">
             Your next

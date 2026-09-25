@@ -44,8 +44,7 @@ export const startVoiceSession = async (bookId: string): Promise<StartSessionRes
          success: true,
          sessionId: session._id.toString(),
       };
-   } catch (e) {
-      console.error('Error starting voice session', e);
+   } catch {
       return { success: false, error: 'Failed to start voice session. Please try again later.' };
    }
 };
@@ -72,8 +71,7 @@ export const endVoiceSession = async (sessionId: string, durationSeconds: number
       if (!result) return { success: false, error: 'Voice session not found.' };
 
       return { success: true };
-   } catch (e) {
-      console.error('Error ending voice session', e);
+   } catch {
       return { success: false, error: 'Failed to end voice session. Please try again later.' };
    }
 };

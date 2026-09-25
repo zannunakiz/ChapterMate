@@ -327,8 +327,6 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
       )
       router.push("/books")
     } catch (error) {
-      console.error("Error while submitting", error)
-
       // Unique-index violation on `slug`: the title was taken by a parallel
       // submit after the checks above, so it is still just a failed upload.
       if (isDuplicateKeyError(error)) {

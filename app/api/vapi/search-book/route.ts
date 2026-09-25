@@ -50,8 +50,6 @@ export async function POST(request: Request) {
    try {
       const body = await request.json();
 
-      console.log('Vapi search-book request:', JSON.stringify(body, null, 2));
-
       // Support multiple Vapi formats
       const functionCall = body?.message?.functionCall;
       const toolCallList = body?.message?.toolCallList || body?.message?.toolCalls;
@@ -92,8 +90,7 @@ export async function POST(request: Request) {
       }
 
       return NextResponse.json({ results });
-   } catch (error) {
-      console.error('Vapi search-book error:', error);
+   } catch {
       return NextResponse.json({
          results: [{ result: 'Error processing request' }],
       });

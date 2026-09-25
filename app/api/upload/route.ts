@@ -31,9 +31,7 @@ export async function POST(request: Request): Promise<NextResponse> {
                tokenPayload: JSON.stringify({ userId })
             }
          },
-         onUploadCompleted: async ({ blob, tokenPayload }) => {
-            console.log("File uploaded to blob:", blob.url, "tokenPayload:", tokenPayload)
-         }
+         onUploadCompleted: async () => {},
       })
 
 

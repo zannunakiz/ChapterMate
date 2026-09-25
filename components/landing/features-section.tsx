@@ -8,7 +8,7 @@ const features = [
     title: "Upload Your Books",
     description:
       "Add your own PDF books to your personal library. ChapterMate processes them instantly and makes them ready for AI-powered conversations.",
-    stats: { value: "Unlimited", label: "PDFs supported" },
+    stats: { value: "100% Free", label: "PDFs supported" },
   },
   {
     number: "02",
@@ -149,6 +149,18 @@ export function FeaturesSection() {
     return () => observer.disconnect()
   }, [])
 
+  useEffect(() => {
+    if (!isVisible) return
+
+    const intervalId = window.setInterval(() => {
+      setActiveFeature((current) => (current + 1) % features.length)
+    }, 2000)
+
+    return () => window.clearInterval(intervalId)
+  }, [isVisible])
+
+  const feature = features[activeFeature]
+
   return (
     <section
       id="features"
@@ -166,11 +178,10 @@ export function FeaturesSection() {
                 Features
               </span>
               <h2
-                className={`text-[clamp(3rem,5vw,6.5rem)] font-display tracking-tight leading-[0.92] break-words transition-all duration-1000 ${
-                  isVisible
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-8"
-                }`}
+                className={`text-[clamp(3rem,5vw,6.5rem)] font-display tracking-tight leading-[0.92] break-words transition-all duration-1000 ${isVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+                  }`}
               >
                 Book
                 <br />
@@ -179,11 +190,10 @@ export function FeaturesSection() {
             </div>
             <div className="lg:col-span-6 lg:pb-4 min-w-0">
               <p
-                className={`text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed transition-all duration-1000 delay-200 ${
-                  isVisible
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-4"
-                }`}
+                className={`text-base md:text-lg lg:text-xl text-muted-foreground leading-relaxed transition-all duration-1000 delay-200 ${isVisible
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+                  }`}
               >
                 Experience a new way to engage with books. Upload your PDFs or
                 explore from our curated collection, then have intelligent
@@ -197,32 +207,34 @@ export function FeaturesSection() {
         <div className="grid lg:grid-cols-12 gap-4 lg:gap-6">
           {/* Large feature card */}
           <div
-            className={`lg:col-span-12 relative bg-black border border-foreground/10 min-h-[500px] overflow-hidden group transition-all duration-700 hover:border-foreground/25 hover:shadow-[0_24px_80px_-32px_rgba(255,255,255,0.32)] flex ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-12"
-            }`}
-            onMouseEnter={() => setActiveFeature(0)}
+            className={`lg:col-span-12 relative bg-black border border-foreground/10 min-h-[500px] overflow-hidden group transition-all duration-700 hover:border-foreground/25 hover:shadow-[0_24px_80px_-32px_rgba(255,255,255,0.32)] flex ${isVisible
+              ? "opacity-100 translate-y-0"
+              : "opacity-0 translate-y-12"
+              }`}
           >
             {/* Left: text content */}
             <div className="relative flex-1 p-8 lg:p-12 bg-black">
               <ParticleVisualization />
-              <div className="relative z-10">
+              <div
+                key={feature.number}
+                className="relative z-10"
+                style={{ animation: "feature-content-fade 500ms ease-in-out" }}
+              >
                 <span className="font-mono text-sm text-muted-foreground">
-                  {features[0].number}
+                  {feature.number}
                 </span>
                 <h3 className="text-3xl lg:text-4xl font-display mt-4 mb-6 group-hover:translate-x-2 transition-transform duration-500">
-                  {features[0].title}
+                  {feature.title}
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed max-w-md mb-8">
-                  {features[0].description}
+                  {feature.description}
                 </p>
                 <div>
                   <span className="text-5xl lg:text-6xl font-display">
-                    {features[0].stats.value}
+                    {feature.stats.value}
                   </span>
                   <span className="block text-sm text-muted-foreground font-mono mt-2">
-                    {features[0].stats.label}
+                    {feature.stats.label}
                   </span>
                 </div>
               </div>
@@ -243,6 +255,12 @@ export function FeaturesSection() {
           </div>
         </div>
       </div>
+      <style>{`
+        @keyframes feature-content-fade {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </section>
   )
 }

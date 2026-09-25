@@ -24,7 +24,6 @@ export const getAllBooks = async () => {
       }
 
    } catch (error) {
-      console.error("error Get All Books", error)
       return { success: false, error }
    }
 }
@@ -43,7 +42,6 @@ export const getUserBooks = async (clerkId: string) => {
       }
 
    } catch (error) {
-      console.error("error Get User Books", error)
       return { success: false, error }
    }
 }
@@ -77,17 +75,15 @@ export const deleteBook = async (slug: string) => {
       if (blobUrls.length > 0) {
          try {
             await del(blobUrls);
-         } catch (error) {
+         } catch {
             // The book itself is already deleted. Do not expose provider errors
             // to the browser or turn a successful ownership-scoped deletion
             // into a false failure because blob cleanup needs attention.
-            console.error("Error deleting book blobs", error);
          }
       }
 
       return { success: true };
-   } catch (error) {
-      console.error("Error deleting book", error);
+   } catch {
       return { success: false, error: "Unable to delete this book. Please try again." };
    }
 }
@@ -108,7 +104,6 @@ export const checkBookExist = async (title: string) => {
       }
 
    } catch (error) {
-      console.error("Error checking book exists")
       return {
          exists: false, error
       }
@@ -161,7 +156,6 @@ export const createBook = async (data: CreateBook) => {
       }
 
    } catch (error) {
-      console.error("Error at createBook book.action.ts", error)
       return {
          error
       }
@@ -180,8 +174,7 @@ export const getBookBySlug = async (slug: string) => {
          success: true,
          data: serializeData(book)
       }
-   } catch (error) {
-      console.error("Error at getBookBySlug book.action.ts", error)
+   } catch {
       return { success: false, data: null }
    }
 }
@@ -205,8 +198,7 @@ export const getBookForSession = async (slug: string, userId?: string | null) =>
          success: true,
          data: serializeData(book)
       }
-   } catch (error) {
-      console.error("Error at getBookForSession book.action.ts", error)
+   } catch {
       return { success: false, data: null }
    }
 }
@@ -249,14 +241,11 @@ export const saveBookSegments = async (
 
       await Book.updateOne({ _id: bookObjectId }, { totalSegments: parsedSegments.length });
 
-      console.log(`Saved ${parsedSegments.length} segments for book ${bookId}`);
-
       return {
          success: true,
          data: { count: parsedSegments.length },
       };
    } catch (error) {
-      console.error('Error at saveBookSegments book.action.ts', error);
       return {
          success: false,
          error: (error as Error).message,
@@ -296,12 +285,8 @@ export const searchBookSegments = async (bookId: string, query: string, limit: n
    try {
       await connectToDatabase();
 
-      console.log(`Searching for: "${query}" in book ${bookId}`);
-
       const bookObjectId = new mongoose.Types.ObjectId(bookId);
       const keywords = extractKeywords(query);
-
-      console.log(`Extracted keywords: [${keywords.join(', ')}]`);
 
       if (keywords.length === 0) {
          return { success: true, data: [] };
@@ -361,14 +346,11 @@ export const searchBookSegments = async (bookId: string, query: string, limit: n
          }
       }
 
-      console.log(`Search complete. Found ${segments.length} results`);
-
       return {
          success: true,
          data: serializeData(segments),
       };
    } catch (error) {
-      console.error('Error searching segments:', error);
       return {
          success: false,
          error: (error as Error).message,
