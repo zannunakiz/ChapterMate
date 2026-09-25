@@ -7,6 +7,7 @@ import { Book } from "@/database/models/book.model";
 import { connectToDatabase } from "@/database/mongoose";
 import { CreateBook, TextSegment } from "@/types";
 import { bookAccessFilter } from "@/lib/book-access";
+import { USER_MAX_BOOK } from "@/lib/constants";
 import mongoose from "mongoose";
 import { escapeRegex, generateSlug, serializeData, splitIntoSegments } from "../utils";
 
@@ -116,6 +117,19 @@ export const checkBookExist = async (title: string) => {
 
 export const createBook = async (data: CreateBook) => {
    try {
+      const { userId } = await auth();
+
+      // Do not trust a Clerk id supplied from the browser. This keeps both the
+      // ownership and the per-user library limit enforceable at the server
+      // boundary even if a client bypasses the add-book page.
+      if (!userId) {
+         return { success: false, error: "You need to log in." };
+      }
+
+      if (data.clerkId !== userId) {
+         return { success: false, error: "You cannot create a book for another user." };
+      }
+
       await connectToDatabase();
 
       const slug = generateSlug(data.title)
@@ -130,7 +144,16 @@ export const createBook = async (data: CreateBook) => {
          }
       }
 
-      const book = await Book.create({ ...data, slug, totalSegments: 0 })
+      const bookCount = await Book.countDocuments({ clerkId: userId });
+
+      if (bookCount >= USER_MAX_BOOK) {
+         return {
+            success: false,
+            error: `You have reached your ${USER_MAX_BOOK}-book limit.`,
+         };
+      }
+
+      const book = await Book.create({ ...data, clerkId: userId, slug, totalSegments: 0 })
 
       return {
          success: true,
