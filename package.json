@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "db:clear": "node database/clear-db.mjs",
     "db:seed-samples": "node --experimental-strip-types database/seed-samples.mjs",
-    "db:check-voices": "node --experimental-strip-types database/check-voices.mjs"
+    "db:check-voices": "node --experimental-strip-types database/check-voices.mjs",
+    "test:limit": "node --experimental-strip-types database/test-book-limit.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.9.4",
