@@ -227,7 +227,7 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
         return
       }
 
-      if (existsCheck?.exists && existsCheck.book) {
+      if (existsCheck?.exists) {
         notifyDuplicateTitle(data.title)
         return
       }
@@ -305,7 +305,6 @@ export default function UploadForm({ dummyForm }: UploadFormProps) {
       // 6. Save the searchable segments.
       const segmentsResult = await saveBookSegments(
         String(bookResult.data._id),
-        userId,
         parsedPDF.content
       )
 

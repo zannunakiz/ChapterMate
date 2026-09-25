@@ -6,7 +6,7 @@ import { clerkMiddleware } from "@clerk/nextjs/server";
 // Sessions are public on purpose: signed-out visitors may talk about the sample
 // books. The page itself authorises every request (lib/book-access.ts) and
 // redirects anything unreadable to /books.
-const publicPathPattern = /^\/(?:$|books\/?$|books\/session(?:\/|$)|home(?:\/|$)|sign-in(?:\/|$)|sign-up(?:\/|$)|api\/health(?:\/|$))/;
+const publicPathPattern = /^\/(?:$|books\/?$|books\/session(?:\/|$)|home(?:\/|$)|sign-in(?:\/|$)|sign-up(?:\/|$))/;
 
 export default clerkMiddleware(async (auth, request) => {
   if (!publicPathPattern.test(request.nextUrl.pathname)) {

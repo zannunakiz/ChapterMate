@@ -142,6 +142,10 @@
   }
 
   html {
+    /* This app is dark-only. Declaring it here is what switches Clerk's
+       prebuilt components to their dark theme, and it also darkens native
+       controls and scrollbars. */
+    color-scheme: dark;
     scroll-behavior: smooth;
     scrollbar-gutter: stable;
     scrollbar-width: thin;

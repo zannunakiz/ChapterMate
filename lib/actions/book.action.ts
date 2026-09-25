@@ -12,23 +12,6 @@ import mongoose from "mongoose";
 import { escapeRegex, generateSlug, serializeData, splitIntoSegments } from "../utils";
 
 
-export const getAllBooks = async () => {
-   try {
-      await connectToDatabase()
-
-      const books = await Book.find().sort({ createdAt: -1 }).lean()
-
-      return {
-         success: true,
-         data: serializeData(books)
-      }
-
-   } catch (error) {
-      return { success: false, error }
-   }
-}
-
-
 // Books belonging to a single signed-in user.
 export const getUserBooks = async (clerkId: string) => {
    try {
@@ -95,14 +78,12 @@ export const checkBookExist = async (title: string) => {
 
       const slug = generateSlug(title)
 
-      const existingBook = await Book.findOne({ slug }).lean()
+      // Only the existence of the slug is reported. Slugs are derived from
+      // titles, so returning the matching document here would hand another
+      // user's book (owner id, blob urls) to whoever guesses its title.
+      const existingBook = await Book.exists({ slug })
 
-      if (existingBook) {
-         return {
-            exists: true, book: serializeData(existingBook)
-         }
-      }
-
+      return { exists: Boolean(existingBook) }
    } catch (error) {
       return {
          exists: false, error
@@ -129,12 +110,13 @@ export const createBook = async (data: CreateBook) => {
 
       const slug = generateSlug(data.title)
 
-      const existingBook = await Book.findOne({ slug }).lean()
+      // Report the title clash without echoing the other user's document back
+      // to the caller: slug uniqueness is global, ownership is not.
+      const existingBook = await Book.exists({ slug })
 
       if (existingBook) {
          return {
             success: true,
-            data: serializeData(existingBook),
             alreadyExists: true
          }
       }
@@ -162,23 +144,6 @@ export const createBook = async (data: CreateBook) => {
    }
 }
 
-export const getBookBySlug = async (slug: string) => {
-   try {
-      await connectToDatabase()
-
-      const book = await Book.findOne({ slug }).lean()
-
-      if (!book) return { success: false, data: null }
-
-      return {
-         success: true,
-         data: serializeData(book)
-      }
-   } catch {
-      return { success: false, data: null }
-   }
-}
-
 // Session-page lookup: resolves a book the viewer is allowed to talk to.
 //
 // The access rule is applied inside the query (see bookAccessFilter), so books
@@ -190,7 +155,11 @@ export const getBookForSession = async (slug: string, userId?: string | null) =>
    try {
       await connectToDatabase()
 
-      const book = await Book.findOne({ slug, ...bookAccessFilter(userId) }).lean()
+      // Only the fields the session UI needs are read, so the payload sent to
+      // the browser cannot carry owner ids or blob keys.
+      const book = await Book.findOne({ slug, ...bookAccessFilter(userId) })
+         .select('_id title author persona coverURL')
+         .lean()
 
       if (!book) return { success: false, data: null }
 
@@ -204,13 +173,26 @@ export const getBookForSession = async (slug: string, userId?: string | null) =>
 }
 
 // Saves the parsed book content as searchable segments.
+//
+// The owner is resolved server-side (the client never supplies it) and the
+// target book must belong to that owner before anything is written, so one
+// user can never replace another user's segments.
 // Accepts either a raw string (segments it here) or pre-parsed TextSegment[] from parsePDFFile.
 export const saveBookSegments = async (
    bookId: string,
-   clerkId: string,
    content: string | TextSegment[],
 ) => {
    try {
+      const { userId } = await auth();
+
+      if (!userId) {
+         return { success: false, error: 'You need to log in.' };
+      }
+
+      if (!mongoose.isValidObjectId(bookId)) {
+         return { success: false, error: 'Book not found.' };
+      }
+
       await connectToDatabase();
 
       if (!content || (typeof content === 'string' && content.trim().length === 0) || (Array.isArray(content) && content.length === 0)) {
@@ -218,6 +200,14 @@ export const saveBookSegments = async (
       }
 
       const bookObjectId = new mongoose.Types.ObjectId(bookId);
+
+      // Ownership is enforced inside the query, so another user's book is never
+      // touched and its segments can never be deleted by this caller.
+      const book = await Book.findOne({ _id: bookObjectId, clerkId: userId }, { _id: 1 }).lean();
+
+      if (!book) {
+         return { success: false, error: 'Book not found.' };
+      }
 
       // Remove any previously saved segments for this book (idempotent re-upload)
       await BookSegment.deleteMany({ bookId: bookObjectId });
@@ -231,7 +221,7 @@ export const saveBookSegments = async (
 
       await BookSegment.insertMany(
          parsedSegments.map((segment) => ({
-            clerkId,
+            clerkId: userId,
             bookId: bookObjectId,
             content: segment.text,
             segmentIndex: segment.segmentIndex,
@@ -239,7 +229,7 @@ export const saveBookSegments = async (
          })),
       );
 
-      await Book.updateOne({ _id: bookObjectId }, { totalSegments: parsedSegments.length });
+      await Book.updateOne({ _id: bookObjectId, clerkId: userId }, { totalSegments: parsedSegments.length });
 
       return {
          success: true,
@@ -280,12 +270,35 @@ function extractKeywords(query: string): string[] {
    return [...new Set(words)];
 }
 
-// Searches book segments using MongoDB text search with keyword-based regex fallback
-export const searchBookSegments = async (bookId: string, query: string, limit: number = 5) => {
+// Searches book segments using MongoDB text search with keyword-based regex fallback.
+//
+// The viewer's access is re-checked against the book before any segment is
+// read (same rule as the session page): signed-out visitors can only search the
+// public sample books, signed-in users the sample books plus their own uploads.
+export const searchBookSegments = async (
+   bookId: string,
+   query: string,
+   limit: number = 5,
+   userId?: string | null,
+) => {
    try {
       await connectToDatabase();
 
+      if (!mongoose.isValidObjectId(bookId)) {
+         return { success: false, error: 'Book not found', data: [] };
+      }
+
       const bookObjectId = new mongoose.Types.ObjectId(bookId);
+
+      const book = await Book.findOne(
+         { _id: bookObjectId, ...bookAccessFilter(userId) },
+         { _id: 1 },
+      ).lean();
+
+      if (!book) {
+         return { success: false, error: 'Book not found', data: [] };
+      }
+
       const keywords = extractKeywords(query);
 
       if (keywords.length === 0) {

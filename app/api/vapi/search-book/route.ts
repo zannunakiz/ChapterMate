@@ -1,9 +1,14 @@
+import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
 import { searchBookSegments } from '@/lib/actions/book.action';
 
-// Helper function to process book search logic
-async function processBookSearch(bookId: unknown, query: unknown) {
+// Helper function to process book search logic.
+//
+// The viewer is resolved from the Clerk session in POST and passed down, so the
+// search itself re-checks that this caller may read the book. Without that check
+// the endpoint would return the content of any book whose ObjectId was known.
+async function processBookSearch(bookId: unknown, query: unknown, userId?: string | null) {
    // Validate inputs before conversion to prevent null/undefined becoming "null"/"undefined" strings
    if (bookId == null || query == null || query === '') {
       return { result: 'Missing bookId or query' };
@@ -18,8 +23,8 @@ async function processBookSearch(bookId: unknown, query: unknown) {
       return { result: 'Missing bookId or query' };
    }
 
-   // Execute search
-   const searchResult = await searchBookSegments(bookIdStr, queryStr, 5);
+   // Execute search, scoped to the caller's access (see lib/book-access.ts)
+   const searchResult = await searchBookSegments(bookIdStr, queryStr, 5, userId);
 
    // Return results
    if (!searchResult.success || !searchResult.data?.length) {
@@ -48,6 +53,7 @@ function parseArgs(args: unknown): Record<string, unknown> {
 
 export async function POST(request: Request) {
    try {
+      const { userId } = await auth();
       const body = await request.json();
 
       // Support multiple Vapi formats
@@ -60,7 +66,7 @@ export async function POST(request: Request) {
          const parsed = parseArgs(parameters);
 
          if (name === 'searchBook') {
-            const result = await processBookSearch(parsed.bookId, parsed.query);
+            const result = await processBookSearch(parsed.bookId, parsed.query, userId);
             return NextResponse.json(result);
          }
 
@@ -82,7 +88,7 @@ export async function POST(request: Request) {
          const args = parseArgs(func?.arguments);
 
          if (name === 'searchBook') {
-            const searchResult = await processBookSearch(args.bookId, args.query);
+            const searchResult = await processBookSearch(args.bookId, args.query, userId);
             results.push({ toolCallId: id, ...searchResult });
          } else {
             results.push({ toolCallId: id, result: `Unknown function: ${name}` });

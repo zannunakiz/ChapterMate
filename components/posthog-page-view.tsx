@@ -31,7 +31,11 @@ export function PostHogPageView() {
     if (!posthog.__loaded) return
 
     const query = searchParams?.toString()
-    const url = `${window.location.origin}${pathname}${query ? `?${query}` : ''}`
+    // A session path is derived from a book title, so the slug is masked before
+    // it reaches analytics: private book titles must not leave the app.
+    const SESSION_PREFIX = '/books/session/'
+    const safePath = pathname.startsWith(SESSION_PREFIX) ? `${SESSION_PREFIX}[slug]` : pathname
+    const url = `${window.location.origin}${safePath}${query ? `?${query}` : ''}`
 
     if (url === lastCapturedUrl) return
     lastCapturedUrl = url
