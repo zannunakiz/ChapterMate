@@ -1,4 +1,5 @@
 import { Toaster } from '@/components/ui/sonner'
+import { PostHogPageView } from '@/components/posthog-page-view'
 import { ClerkProvider } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
@@ -43,6 +44,10 @@ export default function RootLayout({
         className={`${instrumentSans.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <ClerkProvider dynamic>{children}</ClerkProvider>
+        {/* Suspense is required because PostHogPageView reads useSearchParams. */}
+        <React.Suspense fallback={null}>
+          <PostHogPageView />
+        </React.Suspense>
         <Toaster />
         <Analytics />
       </body>
