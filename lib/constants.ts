@@ -23,6 +23,19 @@ export function bookCoverUrl(
   )
 }
 
+// ============================================
+// LIBRARY LIMITS
+// ============================================
+
+/**
+ * Maximum number of books a single signed-in user may own.
+ *
+ * Once a user's library reaches this size, `/books/add` stops rendering the
+ * upload form and shows `AddBookLimitNotice` instead (the user has to delete a
+ * book before uploading another one).
+ */
+export const USER_MAX_BOOK = 10
+
 export const sampleBooks: Book[] = [
   ["Pride and Prejudice", "Jane Austen", "pride-and-prejudice"],
   ["The Great Gatsby", "F. Scott Fitzgerald", "the-great-gatsby"],
