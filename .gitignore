@@ -20,6 +20,9 @@
 # Production
 /build
 
+# README reference
+/documentation/README_Reference.md
+
 # Misc
 .DS_Store
 *.pem
