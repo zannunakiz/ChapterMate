@@ -211,7 +211,7 @@ treated as the *first* gate, never the only one: **every Server Action and route
 ### 📦 Assets — Vercel Blob, uploaded by token exchange
 
 <p align="center">
-  <img src="./public/documentation/VercelBlob.png" alt="Vercel Blob" width="760" />
+  <img src="./public/documentation/VercelBlob.png" alt="Vercel Blob" width="450" />
 </p>
 
 The PDF and the cover are the only binaries in the system, and they never pass *through* Next.js. The route handler
